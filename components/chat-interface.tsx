@@ -532,7 +532,7 @@ export function ChatInterface() {
               
 
               <div className="text-center">
-                <h2 className="text-sm font-semibold leading-tight text-sky-700 md:text-xl">
+                <h2 className="text-sm font-semibold leading-tight text-sky-700 md:text-lg">
                   {activeQuestionText}
                 </h2>
               </div>

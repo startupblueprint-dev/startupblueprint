@@ -71,13 +71,13 @@ export function AnimatedHero() {
         >
           Startup <span className="font-extrabold text-sky-600">Blueprint</span>
         </button>
-        <h1 className="text-[1.37rem] font-semibold leading-tight tracking-tight text-gray-900 sm:text-[2.5rem] sm:leading-tight">
-          <span className="block">
+        <h1 className="text-[clamp(1rem,6vw,1.37rem)] font-semibold leading-tight tracking-tight text-gray-900 sm:text-[2.5rem] sm:leading-tight">
+          <span className="block whitespace-nowrap sm:whitespace-normal">
             {line1Text}
             {isTypingLine1 && <span className="animate-pulse">|</span>}
           </span>
           {line1Text.length === HEADLINE_LINE1.length && (
-            <span className="block">
+            <span className="block whitespace-nowrap sm:whitespace-normal">
               {line2Text}
               {isTypingLine2 && <span className="animate-pulse">|</span>}
               {line2Text.length === HEADLINE_LINE2.length && (
@@ -129,21 +129,21 @@ export function AnimatedHero() {
           )}
         </h1>
         <p
-          className={`pt-2 text-sm text-muted-foreground sm:text-base md:text-lg transition-opacity duration-500 ${
+          className={`pt-2 text-xs text-muted-foreground sm:text-base md:text-lg transition-opacity duration-500 ${
             showDescription ? "opacity-100" : "opacity-0"
           }`}
         >
-          Rapid discovery questions to identify real industry pain, develop
-          <span className="group relative mx-1 inline-flex cursor-help items-center text-muted-foreground">
+          Rapid discovery questions to identify real industry pain, develop{" "}
+          <span className="group relative mx-[2px] inline-flex cursor-help items-center text-muted-foreground sm:mx-1">
             PRD
             <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden w-56 -translate-x-1/2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-normal text-slate-600 opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 sm:block">
               Product Requirement Documents (PRDs) align teams on scope, goals,
               and success metrics before any engineering begins.
             </span>
           </span>
-          for a globally scalable solution, and launch-ready landing pages to
-          immediately sell to your
-          <span className="group relative mx-1 inline-flex cursor-help items-center text-muted-foreground">
+          {" "}for a globally scalable solution, and launch-ready landing pages to
+          immediately sell to your{" "}
+          <span className="group relative mx-[2px] inline-flex cursor-help items-center text-muted-foreground sm:mx-1">
             ICPs
             <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden w-56 -translate-x-1/2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-normal text-slate-600 opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 sm:block">
               Ideal Customer Profiles (ICPs) help you target the exact buyer
@@ -151,12 +151,12 @@ export function AnimatedHero() {
             </span>
             <span className="sr-only">Ideal Customer Profiles</span>
           </span>
-          while you build.
+          {" "}while you build.
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground" />
       <div
-        className={`mt-8 transition-all duration-500 ${
+        className={`mt-8 md:mt-6 transition-all duration-500 ${
           showChat
             ? "translate-y-0 opacity-100"
             : "translate-y-8 opacity-0"

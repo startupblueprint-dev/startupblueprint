@@ -66,3 +66,18 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  @keyframes blueprint-grid-shift {
+    0% {
+      transform: translate3d(0, 0, 0);
+    }
+    100% {
+      transform: translate3d(-64px, -64px, 0);
+    }
+  }
+
+  .blueprint-grid {
+    animation: blueprint-grid-shift 35s linear infinite;
+  }
+}

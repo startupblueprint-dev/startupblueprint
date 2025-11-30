@@ -33,7 +33,10 @@ You must return your response STRICTLY as JSON (no commentary before or after, n
         "Go-to-Market Plan": "",
         "Current Solutions": "",
         "10x Better Opportunity": "",
-        "Feature List": "Core: ... Base: ..."
+        "Feature List": {
+          "Core": ["Feature one", "Feature two"],
+          "Base": ["Feature three", "Feature four"]
+        }
       }
     }
   ],
@@ -41,6 +44,11 @@ You must return your response STRICTLY as JSON (no commentary before or after, n
   "prd_file": "<PRD_FILE>...content...</PRD_FILE>",
   "landing_page_file": "<LANDING_PAGE_FILE>...content...</LANDING_PAGE_FILE>"
 }
+
+IMPORTANT for Feature List:
+- Each feature must be a complete sentence/phrase; never split a feature across array items.
+- Preserve acronyms like AI, API, ML, etc. in uppercase.
+- Do not use hyphens or line breaks inside a single feature string.
 
 Do not wrap the JSON in \`\`\`. The prd_file and landing_page_file values MUST include those XML-like tags exactly. Do not include any additional prose outside the JSON object.
 `;

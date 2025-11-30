@@ -4,7 +4,22 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Send, Loader2, FileText, CircleArrowRight } from "lucide-react";
+import {
+  Send,
+  Loader2,
+  FileText,
+  CircleArrowRight,
+  AlertTriangle,
+  Lightbulb,
+  Users,
+  DollarSign,
+  Route,
+  Layers,
+  Rocket,
+  ListChecks,
+  Check,
+  type LucideIcon,
+} from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
@@ -188,6 +203,12 @@ export function ChatInterface() {
 
   const activeQuestionText = questionText || lastModelMessage?.content || "";
 
+  const sanitizeJsonString = (input: string) =>
+    input
+      .replace(/[\u201C\u201D]/g, '"')
+      .replace(/[\u2018\u2019]/g, "'")
+      .replace(/,\s*([}\]])/g, "$1");
+
   const structuredPayload = useMemo(() => {
     if (!lastModelMessage?.content) return null;
     const raw = lastModelMessage.content.trim();
@@ -195,12 +216,18 @@ export function ChatInterface() {
     const lastBrace = raw.lastIndexOf("}");
     if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) return null;
     const jsonSlice = raw.slice(firstBrace, lastBrace + 1);
-    try {
-      return JSON.parse(jsonSlice);
-    } catch (err) {
-      console.warn("Failed to parse suggestion JSON", err);
-      return null;
+
+    const candidates = [jsonSlice, sanitizeJsonString(jsonSlice)];
+    for (const candidate of candidates) {
+      try {
+        return JSON.parse(candidate);
+      } catch (err) {
+        continue;
+      }
     }
+
+    console.warn("Failed to parse suggestion JSON", jsonSlice);
+    return null;
   }, [lastModelMessage?.content]);
 
   const suggestionFieldLabels = [
@@ -213,6 +240,68 @@ export function ChatInterface() {
     "10x Better Opportunity",
     "Feature List",
   ];
+
+  const suggestionFieldIcons: Record<string, LucideIcon> = {
+    Pain: AlertTriangle,
+    Solution: Lightbulb,
+    "Ideal Customer Profile": Users,
+    "Business Model/Pricing": DollarSign,
+    "Go-to-Market Plan": Route,
+    "Current Solutions": Layers,
+    "10x Better Opportunity": Rocket,
+    "Feature List": ListChecks,
+  };
+
+  const ACRONYMS = ["AI", "API", "ML", "UI", "UX", "SaaS", "CRM", "ERP", "B2B", "B2C", "IoT", "SDK", "KPI"];
+
+  const formatFeatureItem = (text: string) =>
+    text
+      .split(/\s+/)
+      .map((word) => {
+        const upper = word.toUpperCase();
+        if (ACRONYMS.includes(upper)) return upper;
+        return word ? word[0].toUpperCase() + word.slice(1).toLowerCase() : "";
+      })
+      .join(" ");
+
+  const splitRawItems = (text?: string) =>
+    text
+      ? text
+          .split(/\n|(?:,\s*(?=[A-Z]))|•/)
+          .map((item) => item.trim())
+          .filter(Boolean)
+          .map(formatFeatureItem)
+      : [];
+
+  const normalizeFeatureItems = (input?: string | string[]) => {
+    if (!input) return [];
+    if (Array.isArray(input)) {
+      return input.map((item) => formatFeatureItem(item.trim())).filter(Boolean);
+    }
+    return splitRawItems(input);
+  };
+
+  const parseFeatureList = (
+    value: string | { Core?: string | string[]; Base?: string | string[] }
+  ) => {
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      return {
+        core: normalizeFeatureItems(value.Core),
+        base: normalizeFeatureItems(value.Base),
+      };
+    }
+
+    const stringValue = typeof value === "string" ? value : "";
+    const coreMatch = stringValue.match(/Core:?([\s\S]*?)(?=Base:|$)/i);
+    const baseMatch = stringValue.match(/Base:?([\s\S]*)/i);
+    const core = normalizeFeatureItems(coreMatch ? coreMatch[1] : undefined);
+    const base = normalizeFeatureItems(baseMatch ? baseMatch[1] : undefined);
+    if (!core.length && !base.length) {
+      const fallback = normalizeFeatureItems(stringValue);
+      return { core: fallback, base: [] };
+    }
+    return { core, base };
+  };
 
   const suggestions = useMemo<ParsedSuggestion[]>(() => {
     if (structuredPayload?.suggestions?.length) {
@@ -308,30 +397,74 @@ export function ChatInterface() {
                   </div>
                 )}
 
-                <div className="grid gap-6 lg:grid-cols-3">
+                <div className="flex w-full flex-col gap-6">
                   {suggestions.map((suggestion, index) => (
                     <div
                       key={suggestion.title + index}
-                      className="flex flex-col rounded-3xl border border-slate-100 bg-white p-6 shadow-[0_30px_90px_-70px_rgba(15,23,42,0.85)]"
+                      className="flex w-full flex-col rounded-3xl border border-slate-100 bg-white px-[10%] py-6 pb-20 shadow-[0_30px_90px_-70px_rgba(15,23,42,0.85)]"
                     >
                       <div className="space-y-1">
                         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                          Suggestion {index + 1}
+                          Solution {index + 1}
                         </p>
-                        <h3 className="text-xl font-semibold text-slate-900">
+                        <h3 className="text-xl font-bold text-slate-900">
                           {suggestion.title}
                         </h3>
-                        {suggestion.summary && (
-                          <p className="text-sm text-slate-500">{suggestion.summary}</p>
-                        )}
                       </div>
                       <div className="mt-5 space-y-4 text-sm text-slate-600">
                         {suggestionFieldLabels.map((label) => {
                           const value = suggestion.fields[label];
                           if (!value) return null;
+                          const Icon = suggestionFieldIcons[label];
+
+                          if (label === "Feature List") {
+                            const { core, base } = parseFeatureList(value);
+                            return (
+                              <div key={label}>
+                                <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
+                                  {Icon ? <Icon className="h-4 w-4 text-sky-500" /> : null}
+                                  {label}
+                                </p>
+                                <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                                  {core.length > 0 && (
+                                    <div>
+                                      <p className="text-xs font-semibold uppercase text-slate-400">
+                                        Core
+                                      </p>
+                                      <ul className="mt-2 space-y-2 text-slate-700">
+                                        {core.map((item) => (
+                                          <li key={item} className="flex items-start gap-2 text-sm">
+                                            <Check className="mt-0.5 h-4 w-4 text-sky-500" />
+                                            <span>{item}</span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                  {base.length > 0 && (
+                                    <div>
+                                      <p className="text-xs font-semibold uppercase text-slate-400">
+                                        Base
+                                      </p>
+                                      <ul className="mt-2 space-y-2 text-slate-700">
+                                        {base.map((item) => (
+                                          <li key={item} className="flex items-start gap-2 text-sm">
+                                            <Check className="mt-0.5 h-4 w-4 text-sky-500" />
+                                            <span>{item}</span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          }
+
                           return (
                             <div key={label}>
-                              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400">
+                              <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
+                                {Icon ? <Icon className="h-4 w-4 text-sky-500" /> : null}
                                 {label}
                               </p>
                               <p className="whitespace-pre-line text-slate-600">

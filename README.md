@@ -1,109 +1,119 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# Startup Blueprint
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
+**Startup Blueprint** is a guided AI workspace that helps founders validate real market pain, converge on actionable SaaS opportunities, and immediately spin up shipping assets like PRDs and landing-page copy. The conversational flow asks eight high-signal discovery questions, synthesizes three venture concepts, and streams download-ready Markdown deliverables.
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+> “Actually build something that solves real problems.”
 
-## Features
+## Table of contents
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Proxy
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+- [Why this exists](#why-this-exists)
+- [Key features](#key-features)
+- [Architecture & stack](#architecture--stack)
+- [System workflow](#system-workflow)
+- [Quick start](#quick-start)
+- [Environment variables](#environment-variables)
+- [Development scripts](#development-scripts)
+- [Project structure](#project-structure)
+- [Troubleshooting](#troubleshooting)
 
-## Demo
+## Why this exists
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+Most founders ideate in the dark. Startup Blueprint structures the earliest phase of company creation by:
 
-## Deploy to Vercel
+1. Forcing domain founders to articulate concrete problems, ICPs, proof of access, and pricing intuition.
+2. Translating that context into three globally-scalable B2B SaaS blueprints.
+3. Delivering a PRD + landing page so teams can pitch, sell, or test demand immediately.
 
-Vercel deployment will guide you through creating a Supabase account and project.
+## Key features
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+1. **Guided 8-question discovery loop** — Typewriter hero introduces a conversational questionnaire that adapts based on answers and ensures the user can reach at least 10 ICPs.
+2. **Suggestion engine** — After discovery, Gemini 2.5 Pro returns three venture concepts with structured fields (Pain, Solution, ICP, GTM, etc.).
+3. **Deliverable generation** — The same response streams embedded `<PRD_FILE>` and `<LANDING_PAGE_FILE>` blocks that are parsed client-side into download buttons.
+4. **Shadcn/Tailwind UI** — Premium glassmorphism treatment with ThemeSwitcher, animated hero headline, and responsive cards.
+5. **Supabase-ready auth scaffolding** — App Router + `@supabase/ssr` helpers are configured for future gated areas (see `app/auth` and `lib/supabase`).
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+## Architecture & stack
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+| Layer | Details |
+| --- | --- |
+| Frontend | Next.js App Router, React 19, Tailwind CSS, shadcn/ui, lucide-react icons, next-themes for dark/system mode. |
+| AI layer | Google Gemini via `@google/generative-ai`. Flash model handles discovery; Pro model handles synthesis + deliverables. Streaming handled in `app/api/chat/route.ts`. |
+| State & UX | `components/chat-interface.tsx` manages question progression, streaming updates, JSON parsing, and file downloads using ReactMarkdown + remark-gfm. |
+| Backend glue | `lib/gemini-client.ts` centralizes model selection; Supabase client/server helpers live in `lib/supabase`. |
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
+## System workflow
 
-## Clone and run locally
+1. **Discovery phase (turns ≤ 8):** `BASE_PROMPT` steers Gemini Flash to ask one question at a time. The UI tracks progress (e.g., `questionNumber/8`).
+2. **Validation phase:** If founder cannot reach 10 prospects, Gemini loops back to restart discovery.
+3. **Synthesis phase (turns > 8):** Chat route swaps to Gemini 2.5 Pro with `FINAL_PROMPT_APPENDIX`, requesting a strict JSON payload that contains:
+   - Intro copy
+   - `suggestions[]` with `fields` for Pain, Solution, ICP, Pricing, GTM, etc.
+   - `selectionPrompt`
+   - `prd_file` and `landing_page_file` strings wrapped in XML-style tags
+4. **UI rendering:** `ChatInterface` parses the JSON, renders cards for each suggestion, and exposes download buttons that turn the Markdown blobs into files.
 
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
+## Quick start
 
-2. Create a Next.js app using the Supabase Starter template npx command
+```bash
+pnpm install        # or npm install / yarn
+cp .env.example .env.local  # if you keep a template
+# Populate the variables listed below
+pnpm dev            # runs Next.js at http://localhost:3000
+```
 
-   ```bash
-   npx create-next-app --example with-supabase with-supabase-app
-   ```
+The repo already includes `app`, `components`, and Supabase helpers—no need to scaffold anything else.
 
-   ```bash
-   yarn create next-app --example with-supabase with-supabase-app
-   ```
+## Environment variables
 
-   ```bash
-   pnpm create next-app --example with-supabase with-supabase-app
-   ```
+Create `.env.local` with the following values (Vercel also supports these names):
 
-3. Use `cd` to change into the app's directory
+```env
+NEXT_PUBLIC_SUPABASE_URL=<your Supabase project URL>
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<anon or publishable key>
+GEMINI_API_KEY=<Google AI Studio key>
+```
 
-   ```bash
-   cd with-supabase-app
-   ```
+Notes:
 
-4. Rename `.env.example` to `.env.local` and update the following:
+1. Supabase currently issues legacy `...ANON_KEY`; you can paste it into the publishable slot while migrating.
+2. `GEMINI_API_KEY` powers both Flash and Pro models—ensure the key has access to `gemini-2.5-flash` and `gemini-2.5-pro`.
+3. Do **not** commit `.env.local`.
 
-  ```env
-  NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[INSERT SUPABASE PROJECT API PUBLISHABLE OR ANON KEY]
-  ```
-  > [!NOTE]
-  > This example uses `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, which refers to Supabase's new **publishable** key format.
-  > Both legacy **anon** keys and new **publishable** keys can be used with this variable name during the transition period. Supabase's dashboard may show `NEXT_PUBLIC_SUPABASE_ANON_KEY`; its value can be used in this example.
-  > See the [full announcement](https://github.com/orgs/supabase/discussions/29260) for more information.
+## Development scripts
 
-  Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
+| Command | Description |
+| --- | --- |
+| `pnpm dev` | Next.js dev server with HMR. |
+| `pnpm build` | Production build + type check. |
+| `pnpm start` | Starts the compiled app. |
+| `pnpm lint` | Runs ESLint with Next.js config. |
 
-5. You can now run the Next.js local development server:
+## Project structure
 
-   ```bash
-   npm run dev
-   ```
+```
+startupblueprint/
+├─ app/
+│  ├─ api/chat/route.ts          # Streaming Gemini orchestrator
+│  ├─ auth/*                     # Supabase auth routes (login, signup, etc.)
+│  ├─ layout.tsx / page.tsx      # ThemeProvider + hero landing page
+│  └─ globals.css                # Tailwind base styles & blueprint background
+├─ components/
+│  ├─ animated-hero.tsx          # Typewriter headline + chat mount animation
+│  ├─ chat-interface.tsx         # Core discovery UI + result cards
+│  └─ ui/*                       # shadcn/ui primitives
+├─ lib/
+│  ├─ gemini-client.ts           # Helper to fetch configured Gemini models
+│  └─ supabase/*                 # Browser/server clients for future auth gating
+├─ tailwind.config.ts            # Tailwind + shadcn presets
+└─ components.json               # shadcn/ui registry
+```
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+## Troubleshooting
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+1. **Streaming hangs** – Confirm the Gemini key is valid and the model names (`gemini-2.5-flash`, `gemini-2.5-pro`) are enabled for the project.
+2. **Supabase auth cookies fail** – When deploying on Vercel, ensure `NEXT_PUBLIC_SUPABASE_*` vars are set in both “Environment Variables” and “Edge Config” if using the integration.
+3. **shadcn styles missing** – Delete `components.json` only if you plan to reinstall the UI kit; otherwise keep it in sync with generated components.
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+---
 
-## Feedback and issues
-
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
-
-## More Supabase examples
-
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+Feel free to open issues or PRs to expand the idea selection prompts, add persistence for interview answers, or wire up Supabase auth for saved workspaces.

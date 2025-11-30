@@ -1,7 +1,8 @@
 import { getGeminiModel } from "@/lib/gemini-client";
 import { NextResponse } from "next/server";
+import { performance } from "perf_hooks";
 
-const SYSTEM_PROMPT = `The objective is to suggest a new business venture with the following criteria:
+const BASE_PROMPT = `The objective is to suggest a new business venture with the following criteria:
 1. User has domain expertise
 2. Globally scalable b2b SAAS
 3. User knows at least 10 people to be immediate pilot customers
@@ -9,32 +10,51 @@ const SYSTEM_PROMPT = `The objective is to suggest a new business venture with t
 Ask the user 8 questions to get the answer to these as precise as possible.
 Ask the questions 1 by 1.
 
-Make responses short and concise to not overwhelm the user.
+Do not make any response to user.
 
 If the user does not know at least 10 people, then ask the user if they can easily reach 10 people. If not, then start the process again from beginning.
+`;
 
-With the answers, suggest 3 business solutions. For each one, in table format outline pain, solution, ideal customer profile, business model/pricing and and go to market plan, current available solutions in the market (competitors), opportunities on how to be 10x better than existing solution. Outline feature list, core functions and base functions such as login etc.
+const FINAL_PROMPT_APPENDIX = `
+With the answers, suggest 3 business solutions. For each one, outline pain, solution, ideal customer profile, business model/pricing, go to market plan, current solutions, 10x better opportunity, and feature list (core + base).
 
-Then allow the user to select which of the 3 suggestions they wish to build.
-Create a 2 downloadable .md files:
-1. Product Requirement Document, for tech stack next.js, Supabase, vercel, tailwind CSS, shadcn UI, lucide react icons.
-Outline core functions for MVP, and future product roadmap functions.
-2. High converting pain solution landing page targeted at Ideal Customer Profile.
+You must return your response STRICTLY as JSON (no commentary before or after, no code fences). Use this structure:
+{
+  "intro": "short paragraph",
+  "suggestions": [
+    {
+      "title": "",
+      "summary": "one sentence",
+      "fields": {
+        "Pain": "",
+        "Solution": "",
+        "Ideal Customer Profile": "",
+        "Business Model/Pricing": "",
+        "Go-to-Market Plan": "",
+        "Current Solutions": "",
+        "10x Better Opportunity": "",
+        "Feature List": "Core: ... Base: ..."
+      }
+    }
+  ],
+  "selectionPrompt": "Ask user which suggestion they want to build",
+  "prd_file": "<PRD_FILE>...content...</PRD_FILE>",
+  "landing_page_file": "<LANDING_PAGE_FILE>...content...</LANDING_PAGE_FILE>"
+}
 
-IMPORTANT:
-When you reach the final step of generating the 2 downloadable .md files, you MUST wrap the content of each file in specific XML-like tags so the application can extract them for the user.
-Wrap the Product Requirement Document content in <PRD_FILE> ... </PRD_FILE>.
-Wrap the Landing Page content in <LANDING_PAGE_FILE> ... </LANDING_PAGE_FILE>.
-Do not put the tags inside code blocks (like \`\`\`), put them as raw text structure around the content.
+Do not wrap the JSON in \`\`\`. The prd_file and landing_page_file values MUST include those XML-like tags exactly. Do not include any additional prose outside the JSON object.
 `;
 
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
-    // Using gemini-2.5-pro as the stable model. 
-    // If a specific newer model is required, change the first argument.
-    const model = getGeminiModel("gemini-2.5-pro", SYSTEM_PROMPT);
+    const userTurnCount = messages.filter((m: any) => m.role === 'user').length;
+    const inDiscoveryPhase = userTurnCount <= 8;
+    const modelName = inDiscoveryPhase ? "gemini-2.5-flash" : "gemini-2.5-pro";
+    const systemPrompt = inDiscoveryPhase ? BASE_PROMPT : `${BASE_PROMPT}\n\n${FINAL_PROMPT_APPENDIX}`;
+
+    const model = getGeminiModel(modelName, systemPrompt);
 
     // Separate the last message (current user prompt) from history
     const currentMessage = messages[messages.length - 1];
@@ -66,6 +86,7 @@ export async function POST(req: Request) {
       history: history,
     });
 
+    const requestStart = performance.now();
     const result = await chat.sendMessageStream(currentMessage.content);
     
     const stream = new ReadableStream({
@@ -82,9 +103,12 @@ export async function POST(req: Request) {
       },
     });
 
-    return new Response(stream, {
+    const response = new Response(stream, {
       headers: { "Content-Type": "text/plain; charset=utf-8" },
     });
+
+    console.log("/api/chat latency", modelName, `${(performance.now() - requestStart).toFixed(0)}ms`);
+    return response;
 
   } catch (error) {
     console.error("Error in chat route:", error);

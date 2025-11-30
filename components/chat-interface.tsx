@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +14,12 @@ type Message = {
   content: string;
   prdContent?: string;
   landingPageContent?: string;
+};
+
+type ParsedSuggestion = {
+  title: string;
+  summary?: string;
+  fields: Record<string, string>;
 };
 
 export function ChatInterface() {
@@ -149,13 +155,122 @@ export function ChatInterface() {
 
   // Determine current view state
   const lastModelMessage = messages.slice().reverse().find(m => m.role === "model");
-  const isResultView = lastModelMessage && (
-    lastModelMessage.content.length > 400 || 
-    lastModelMessage.content.includes("|") || 
-    lastModelMessage.prdContent !== undefined
-  );
 
   const questionNumber = messages.filter(m => m.role === "user").length + 1;
+
+  const { prefaceText, questionText } = useMemo(() => {
+    const content = lastModelMessage?.content ?? "";
+    const markerIndex = content.indexOf("**Question");
+    if (markerIndex === -1) {
+      return { prefaceText: content.trim(), questionText: "" };
+    }
+    const preface = content.slice(0, markerIndex).trim();
+    const question = content
+      .slice(markerIndex)
+      .replace(/\*\*/g, "")
+      .trim();
+    return { prefaceText: preface, questionText: question };
+  }, [lastModelMessage?.content]);
+
+  const activeQuestionText = questionText || lastModelMessage?.content || "";
+
+  const structuredPayload = useMemo(() => {
+    if (!lastModelMessage?.content) return null;
+    const raw = lastModelMessage.content.trim();
+    const firstBrace = raw.indexOf("{");
+    const lastBrace = raw.lastIndexOf("}");
+    if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) return null;
+    const jsonSlice = raw.slice(firstBrace, lastBrace + 1);
+    try {
+      return JSON.parse(jsonSlice);
+    } catch (err) {
+      console.warn("Failed to parse suggestion JSON", err);
+      return null;
+    }
+  }, [lastModelMessage?.content]);
+
+  const suggestionFieldLabels = [
+    "Pain",
+    "Solution",
+    "Ideal Customer Profile",
+    "Business Model/Pricing",
+    "Go-to-Market Plan",
+    "Current Solutions",
+    "10x Better Opportunity",
+    "Feature List",
+  ];
+
+  const suggestions = useMemo<ParsedSuggestion[]>(() => {
+    if (structuredPayload?.suggestions?.length) {
+      return structuredPayload.suggestions.map((item: any) => ({
+        title: item.title ?? "",
+        summary: item.summary ?? "",
+        fields: item.fields ?? {},
+      }));
+    }
+
+    if (!lastModelMessage?.content) return [];
+    const content = lastModelMessage.content;
+    const regex = /Suggestion\s+(\d+):\s*([^\n]+)\n([\s\S]*?)(?=Suggestion\s+\d+:|$)/gi;
+    const lookup = suggestionFieldLabels.reduce<Record<string, string>>((acc, label) => {
+      acc[label.toLowerCase()] = label;
+      return acc;
+    }, {});
+
+    const parsed: ParsedSuggestion[] = [];
+    let match;
+    while ((match = regex.exec(content)) !== null) {
+      const title = match[2].trim();
+      const block = match[3].trim();
+      const lines = block.split(/\r?\n/);
+      const fields: Record<string, string> = {};
+      const summaryParts: string[] = [];
+      let currentLabel: string | null = null;
+
+      for (const rawLine of lines) {
+        const line = rawLine.trim();
+        if (!line) continue;
+        const normalized = lookup[line.toLowerCase()];
+        if (normalized) {
+          currentLabel = normalized;
+          fields[currentLabel] = "";
+          continue;
+        }
+        if (currentLabel) {
+          fields[currentLabel] = fields[currentLabel]
+            ? `${fields[currentLabel]}\n${line}`
+            : line;
+        } else {
+          summaryParts.push(line);
+        }
+      }
+
+      parsed.push({
+        title,
+        summary: summaryParts.join(" ").trim(),
+        fields,
+      });
+    }
+
+    return parsed;
+  }, [lastModelMessage?.content, suggestionFieldLabels]);
+
+  const summaryContent = useMemo(() => {
+    if (structuredPayload?.intro) return structuredPayload.intro;
+    if (!lastModelMessage?.content) return "";
+    if (!suggestions.length) return lastModelMessage.content;
+    const intro = lastModelMessage.content.split(/Suggestion\s+1:/i)[0]?.trim();
+    return intro || "";
+  }, [structuredPayload, lastModelMessage?.content, suggestions.length]);
+
+  const selectionPrompt = structuredPayload?.selectionPrompt ?? "";
+
+  const isResultView = lastModelMessage && (
+    suggestions.length > 0 ||
+    lastModelMessage.content.length > 400 ||
+    lastModelMessage.content.includes("|") ||
+    lastModelMessage.prdContent !== undefined
+  );
 
   return (
     <div className="w-full max-w-4xl">
@@ -168,32 +283,81 @@ export function ChatInterface() {
             <p className="mt-4 text-base font-medium text-slate-500">Blueprint is thinking…</p>
           </div>
         ) : isResultView ? (
-          <div className="rounded-[36px] border border-white/60 bg-white/95 p-10 shadow-[0_40px_140px_-80px_rgba(15,23,42,0.65)] backdrop-blur">
-            <div className="prose prose-slate max-w-none text-slate-700">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {lastModelMessage?.content || ""}
-              </ReactMarkdown>
-            </div>
+          <div className="rounded-[36px] border border-white/60 bg-white/95 p-10 shadow-[0_40px_140px_-80px_rgba(15,23,42,0.65)] backdrop-blur space-y-8">
+            {suggestions.length ? (
+              <div className="space-y-10">
+                {summaryContent && (
+                  <div className="prose prose-slate max-w-none text-slate-700">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {summaryContent}
+                    </ReactMarkdown>
+                  </div>
+                )}
+
+                <div className="grid gap-6 lg:grid-cols-3">
+                  {suggestions.map((suggestion, index) => (
+                    <div
+                      key={suggestion.title + index}
+                      className="flex flex-col rounded-3xl border border-slate-100 bg-white p-6 shadow-[0_30px_90px_-70px_rgba(15,23,42,0.85)]"
+                    >
+                      <div className="space-y-1">
+                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                          Suggestion {index + 1}
+                        </p>
+                        <h3 className="text-xl font-semibold text-slate-900">
+                          {suggestion.title}
+                        </h3>
+                        {suggestion.summary && (
+                          <p className="text-sm text-slate-500">{suggestion.summary}</p>
+                        )}
+                      </div>
+                      <div className="mt-5 space-y-4 text-sm text-slate-600">
+                        {suggestionFieldLabels.map((label) => {
+                          const value = suggestion.fields[label];
+                          if (!value) return null;
+                          return (
+                            <div key={label}>
+                              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400">
+                                {label}
+                              </p>
+                              <p className="whitespace-pre-line text-slate-600">
+                                {value}
+                              </p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="prose prose-slate max-w-none text-slate-700">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {lastModelMessage?.content || ""}
+                </ReactMarkdown>
+              </div>
+            )}
 
             {(lastModelMessage?.prdContent || lastModelMessage?.landingPageContent) && (
               <div className="mt-8 flex flex-wrap gap-4 rounded-3xl border border-slate-100 bg-slate-50/80 p-6">
                 {lastModelMessage.prdContent && (
                   <Button
                     size="lg"
-                    className="gap-2 rounded-2xl bg-white text-slate-900 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.65)]"
+                    className="group gap-2 rounded-2xl bg-white text-slate-900 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.65)] transition-colors hover:bg-sky-500 hover:text-white"
                     onClick={() => downloadFile("PRD.md", lastModelMessage.prdContent!)}
                   >
-                    <FileText className="w-5 h-5 text-sky-500" />
+                    <FileText className="w-5 h-5 text-sky-500 transition-colors group-hover:text-white" />
                     Download PRD
                   </Button>
                 )}
                 {lastModelMessage.landingPageContent && (
                   <Button
                     size="lg"
-                    className="gap-2 rounded-2xl bg-white text-slate-900 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.65)]"
+                    className="group gap-2 rounded-2xl bg-white text-slate-900 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.65)] transition-colors hover:bg-sky-500 hover:text-white"
                     onClick={() => downloadFile("LandingPage.md", lastModelMessage.landingPageContent!)}
                   >
-                    <FileText className="w-5 h-5 text-sky-500" />
+                    <FileText className="w-5 h-5 text-sky-500 transition-colors group-hover:text-white" />
                     Download Landing Page
                   </Button>
                 )}
@@ -220,9 +384,9 @@ export function ChatInterface() {
             <div className="rounded-[40px] border border-white/70 bg-white/90 p-10 shadow-[0_40px_140px_-90px_rgba(15,23,42,0.75)] backdrop-blur">
               
 
-              <div className="space-y-3 text-center">
+              <div className="text-center">
                 <h2 className="text-xl font-semibold leading-tight text-sky-700 md:text-xl">
-                  {lastModelMessage?.content}
+                  {activeQuestionText}
                 </h2>
               </div>
               <div className="mt-8 rounded-[999px] border border-slate-100 bg-white/95 p-2 shadow-[0_30px_80px_-50px_rgba(15,23,42,0.75)]">

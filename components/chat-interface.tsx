@@ -511,14 +511,14 @@ export function ChatInterface() {
               </div>
             )}
 
-            <div className="mt-8 flex gap-3 rounded-2xl border border-slate-100 bg-white/80 p-4">
+            <div className="mt-8 flex gap-3 rounded-2xl border border-slate-100 bg-white/80 p-3">
               <Input
                 placeholder="Reply to refine the plan…"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 disabled={isLoading}
-                className="h-auto flex-1 border-0 bg-transparent px-0 text-base text-slate-900 placeholder:text-slate-400 focus-visible:ring-0"
+                className="h-auto flex-1 border-none bg-transparent px-0 text-base text-slate-900 placeholder:text-slate-400 shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
               />
               <Button onClick={handleSend} disabled={isLoading || !input.trim()} className="rounded-full bg-sky-500 text-white">
                 <Send className="w-4 h-4" />
@@ -536,15 +536,15 @@ export function ChatInterface() {
                   {activeQuestionText}
                 </h2>
               </div>
-              <div className="mt-4 rounded-2xl border border-slate-100 bg-white/95 p-2 shadow-[0_30px_80px_-50px_rgba(15,23,42,0.75)] sm:mt-8 sm:rounded-[999px]">
-                <div className="flex flex-col gap-3 rounded-2xl bg-white px-4 py-3 sm:flex-row sm:items-center sm:gap-4 sm:rounded-[999px] sm:px-6">
+              <div className="mt-4 rounded-2xl border border-slate-100 bg-white/95 p-1.5 shadow-[0_30px_80px_-50px_rgba(15,23,42,0.75)] sm:mt-8 sm:rounded-[999px] sm:p-2">
+                <div className="flex flex-col gap-3 rounded-2xl bg-white px-3 py-2 sm:flex-row sm:items-center sm:gap-4 sm:rounded-[999px] sm:px-5 sm:py-3">
                   <textarea
                     ref={textareaRef}
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="Type your answer here…"
-                    className="block h-auto max-h-32 w-full flex-1 resize-none border-0 bg-transparent px-0 text-sm text-slate-900 placeholder:text-slate-400 focus-visible:ring-0 sm:hidden"
+                    className="block h-auto max-h-32 w-full flex-1 resize-none border-none bg-transparent px-0 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus-visible:ring-0 focus-visible:ring-offset-0 sm:hidden"
                   />
                   <Input
                     ref={inputRef}
@@ -552,7 +552,7 @@ export function ChatInterface() {
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="Type your answer here…"
-                    className="hidden h-auto w-full flex-1 border-0 bg-transparent px-0 text-base text-slate-900 placeholder:text-slate-400 focus-visible:ring-0 sm:block sm:text-lg"
+                    className="hidden h-auto w-full flex-1 border-none bg-transparent px-0 text-base text-slate-900 placeholder:text-slate-400 shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0 sm:block sm:text-lg"
                     autoFocus
                   />
                   <Button

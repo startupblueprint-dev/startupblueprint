@@ -64,9 +64,13 @@ export function AnimatedHero() {
   return (
     <div className="space-y-1 text-center md:space-y-6 md:text-left">
       <div className="space-y-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground sm:text-sm">
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 sm:text-sm"
+        >
           Startup <span className="font-extrabold text-sky-600">Blueprint</span>
-        </p>
+        </button>
         <h1 className="text-[1.37rem] font-semibold leading-tight tracking-tight text-gray-900 sm:text-[2.5rem] sm:leading-tight">
           <span className="block">
             {line1Text}
@@ -129,9 +133,25 @@ export function AnimatedHero() {
             showDescription ? "opacity-100" : "opacity-0"
           }`}
         >
-          Rapid discovery questions to identify real industry pain, develop PRD
+          Rapid discovery questions to identify real industry pain, develop
+          <span className="group relative mx-1 inline-flex cursor-help items-center text-muted-foreground">
+            PRD
+            <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden w-56 -translate-x-1/2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-normal text-slate-600 opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 sm:block">
+              Product Requirement Documents (PRDs) align teams on scope, goals,
+              and success metrics before any engineering begins.
+            </span>
+          </span>
           for a globally scalable solution, and launch-ready landing pages to
-          immidiately sell to your ICPs while you build.
+          immediately sell to your
+          <span className="group relative mx-1 inline-flex cursor-help items-center text-muted-foreground">
+            ICPs
+            <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden w-56 -translate-x-1/2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-normal text-slate-600 opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 sm:block">
+              Ideal Customer Profiles (ICPs) help you target the exact buyer
+              personas who feel the pain most and convert fastest.
+            </span>
+            <span className="sr-only">Ideal Customer Profiles</span>
+          </span>
+          while you build.
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground" />

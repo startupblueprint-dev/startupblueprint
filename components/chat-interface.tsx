@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Send, ArrowRight, Download, Loader2, FileText, CheckCircle2 } from "lucide-react";
+import { Send, Loader2, FileText, CheckCircle2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
@@ -158,117 +158,110 @@ export function ChatInterface() {
   const questionNumber = messages.filter(m => m.role === "user").length + 1;
 
   return (
-    <div className="w-full max-w-4xl min-h-[60vh] flex flex-col justify-center items-center relative perspective-1000">
-      
-      {/* Main Content Area */}
-      <div className="w-full transition-all duration-500 ease-in-out">
+    <div className="w-full max-w-4xl">
+      <div className="relative w-full transition-all duration-500 ease-in-out">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center gap-6 animate-in fade-in duration-500">
-             <div className="relative">
-                <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
-                <Loader2 className="w-12 h-12 animate-spin text-primary relative z-10" />
-             </div>
-             <p className="text-xl text-muted-foreground font-light animate-pulse">Thinking...</p>
+          <div className="rounded-[36px] border border-white/60 bg-white/80 p-12 text-center shadow-[0_40px_120px_-70px_rgba(15,23,42,0.75)] backdrop-blur">
+            <div className="inline-flex items-center justify-center rounded-full bg-sky-50 p-5">
+              <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+            </div>
+            <p className="mt-4 text-base font-medium text-slate-500">Blueprint is thinking…</p>
           </div>
         ) : isResultView ? (
-          /* Result / Complex View */
-          <Card className="w-full shadow-2xl border-muted animate-in slide-in-from-bottom-10 fade-in duration-700">
-            <CardContent className="p-8 max-h-[75vh] overflow-y-auto custom-scrollbar">
-               <div className="prose dark:prose-invert max-w-none">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {lastModelMessage?.content || ""}
-                  </ReactMarkdown>
-               </div>
+          <div className="rounded-[36px] border border-white/60 bg-white/95 p-10 shadow-[0_40px_140px_-80px_rgba(15,23,42,0.65)] backdrop-blur">
+            <div className="prose prose-slate max-w-none text-slate-700">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {lastModelMessage?.content || ""}
+              </ReactMarkdown>
+            </div>
 
-               {/* File Download Buttons */}
-               {(lastModelMessage?.prdContent || lastModelMessage?.landingPageContent) && (
-                  <div className="flex flex-wrap gap-4 mt-8 pt-6 border-t">
-                    {lastModelMessage.prdContent && (
-                      <Button 
-                        size="lg" 
-                        className="gap-2 shadow-lg hover:shadow-xl transition-all"
-                        onClick={() => downloadFile("PRD.md", lastModelMessage.prdContent!)}
-                      >
-                        <FileText className="w-5 h-5" />
-                        Download PRD
-                      </Button>
-                    )}
-                    {lastModelMessage.landingPageContent && (
-                      <Button 
-                        size="lg" 
-                        className="gap-2 shadow-lg hover:shadow-xl transition-all"
-                        onClick={() => downloadFile("LandingPage.md", lastModelMessage.landingPageContent!)}
-                      >
-                        <FileText className="w-5 h-5" />
-                        Download Landing Page
-                      </Button>
-                    )}
-                  </div>
+            {(lastModelMessage?.prdContent || lastModelMessage?.landingPageContent) && (
+              <div className="mt-8 flex flex-wrap gap-4 rounded-3xl border border-slate-100 bg-slate-50/80 p-6">
+                {lastModelMessage.prdContent && (
+                  <Button
+                    size="lg"
+                    className="gap-2 rounded-2xl bg-white text-slate-900 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.65)]"
+                    onClick={() => downloadFile("PRD.md", lastModelMessage.prdContent!)}
+                  >
+                    <FileText className="w-5 h-5 text-sky-500" />
+                    Download PRD
+                  </Button>
                 )}
-                <div ref={scrollRef} />
-            </CardContent>
-            {/* In result view, we might want a different input or just continue conversation */}
-             <div className="p-4 border-t bg-muted/10">
-                <div className="flex gap-2">
-                    <Input
-                        placeholder="Reply to refine..."
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        disabled={isLoading}
-                        className="flex-1"
-                    />
-                    <Button onClick={handleSend} disabled={isLoading || !input.trim()}>
-                        <Send className="w-4 h-4" />
-                    </Button>
-                </div>
-             </div>
-          </Card>
-        ) : (
-          /* Typeform-style Question View */
-          <div className="flex flex-col gap-8 max-w-2xl mx-auto w-full animate-in slide-in-from-bottom-8 fade-in duration-500">
-             <div className="space-y-2">
-                <div className="flex items-center gap-2 text-primary/80 font-medium uppercase tracking-wider text-sm mb-4">
-                    <span className="flex items-center justify-center w-6 h-6 rounded-full border border-primary/30 text-xs">
-                        {questionNumber}
-                    </span>
-                    QUESTION
-                </div>
-                <h2 className="text-3xl md:text-4xl font-medium leading-tight tracking-tight text-foreground">
-                    {lastModelMessage?.content}
-                </h2>
-             </div>
+                {lastModelMessage.landingPageContent && (
+                  <Button
+                    size="lg"
+                    className="gap-2 rounded-2xl bg-white text-slate-900 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.65)]"
+                    onClick={() => downloadFile("LandingPage.md", lastModelMessage.landingPageContent!)}
+                  >
+                    <FileText className="w-5 h-5 text-sky-500" />
+                    Download Landing Page
+                  </Button>
+                )}
+              </div>
+            )}
 
-             <div className="relative group">
-                <Input
+            <div className="mt-8 flex gap-3 rounded-2xl border border-slate-100 bg-white/80 p-4">
+              <Input
+                placeholder="Reply to refine the plan…"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                disabled={isLoading}
+                className="h-auto flex-1 border-0 bg-transparent px-0 text-base text-slate-900 placeholder:text-slate-400 focus-visible:ring-0"
+              />
+              <Button onClick={handleSend} disabled={isLoading || !input.trim()} className="rounded-full bg-sky-500 text-white">
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
+            <div ref={scrollRef} />
+          </div>
+        ) : (
+          <div className="relative isolate animate-in fade-in slide-in-from-bottom-8 duration-500">
+            <div className="rounded-[40px] border border-white/70 bg-white/90 p-10 shadow-[0_40px_140px_-90px_rgba(15,23,42,0.75)] backdrop-blur">
+              
+
+              <div className="space-y-3 text-center">
+                <h2 className="text-xl font-semibold leading-tight text-sky-700 md:text-xl">
+                  {lastModelMessage?.content}
+                </h2>
+              </div>
+              <div className="mt-8 rounded-[999px] border border-slate-100 bg-white/95 p-2 shadow-[0_30px_80px_-50px_rgba(15,23,42,0.75)]">
+                <div className="flex items-center gap-4 rounded-[999px] bg-white px-6 py-3">
+                  <Input
                     ref={inputRef}
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Type your answer here..."
-                    className="w-full text-2xl md:text-3xl border-0 border-b-2 border-muted-foreground/20 rounded-none px-0 py-4 h-auto focus-visible:ring-0 focus-visible:border-primary bg-transparent placeholder:text-muted-foreground/30 transition-colors"
+                    placeholder="Type your answer here…"
+                    className="h-auto flex-1 border-0 bg-transparent px-0 text-lg text-slate-900 placeholder:text-slate-400 focus-visible:ring-0"
                     autoFocus
-                />
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300">
-                    <Button 
-                        onClick={handleSend}
-                        disabled={!input.trim()}
-                        size="lg"
-                        className={cn(
-                            "rounded-full px-6 transition-all duration-300",
-                            input.trim() ? "translate-x-0 opacity-100" : "translate-x-4 opacity-0 pointer-events-none"
-                        )}
-                    >
-                        OK <CheckCircle2 className="w-4 h-4 ml-2" />
-                    </Button>
+                  />
+                  <Button
+                    onClick={handleSend}
+                    disabled={!input.trim()}
+                    className={cn(
+                      "rounded-full bg-slate-900 px-6 text-white transition-all",
+                      !input.trim() && "opacity-50"
+                    )}
+                  >
+                    OK <CheckCircle2 className="ml-2 h-4 w-4" />
+                  </Button>
                 </div>
-                <div className="mt-4 text-xs text-muted-foreground flex items-center gap-1 opacity-60">
-                    <span>Press</span> 
-                    <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                        <span className="text-xs">↵</span> Enter
-                    </kbd>
+              </div>
+
+              <div className="mt-6 space-y-2">
+                <div className="flex items-center gap-3 text-xs font-semibold text-slate-400">
+                  <div className="h-1.5 flex-1 rounded-full bg-slate-100">
+                    <div
+                      className="h-full rounded-full bg-sky-500 transition-all"
+                      style={{ width: `${Math.min((questionNumber / 8) * 100, 100)}%` }}
+                    />
+                  </div>
+                  <span className="whitespace-nowrap">{questionNumber}/8</span>
                 </div>
-             </div>
+              </div>
+            </div>
+
           </div>
         )}
       </div>

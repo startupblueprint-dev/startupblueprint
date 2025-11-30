@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Send, Loader2, FileText, CheckCircle2 } from "lucide-react";
+import { Send, Loader2, FileText, CircleArrowRight } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
@@ -32,6 +32,7 @@ export function ChatInterface() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Auto-focus input on load and after loading
@@ -40,6 +41,19 @@ export function ChatInterface() {
       inputRef.current.focus();
     }
   }, [isLoading]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && input) {
+      localStorage.setItem("pendingInput", input);
+    }
+  }, [input]);
+
+  useEffect(() => {
+    if (!textareaRef.current) return;
+    const el = textareaRef.current;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [input]);
 
   const scrollToBottom = () => {
     if (scrollRef.current) {
@@ -273,7 +287,7 @@ export function ChatInterface() {
   );
 
   return (
-    <div className="w-full max-w-4xl">
+    <div className="w-full sm:max-w-4xl">
       <div className="relative w-full transition-all duration-500 ease-in-out">
         {isLoading ? (
           <div className="rounded-[36px] border border-white/60 bg-white/80 p-12 text-center shadow-[0_40px_120px_-70px_rgba(15,23,42,0.75)] backdrop-blur">
@@ -381,23 +395,31 @@ export function ChatInterface() {
           </div>
         ) : (
           <div className="relative isolate animate-in fade-in slide-in-from-bottom-8 duration-500">
-            <div className="rounded-[40px] border border-white/70 bg-white/90 p-10 shadow-[0_40px_140px_-90px_rgba(15,23,42,0.75)] backdrop-blur">
+            <div className="rounded-[40px] border border-white/70 bg-white/90 px-4 pb-6 pt-4 shadow-[0_40px_140px_-90px_rgba(15,23,42,0.75)] backdrop-blur sm:p-10">
               
 
               <div className="text-center">
-                <h2 className="text-xl font-semibold leading-tight text-sky-700 md:text-xl">
+                <h2 className="text-sm font-semibold leading-tight text-sky-700 md:text-xl">
                   {activeQuestionText}
                 </h2>
               </div>
-              <div className="mt-8 rounded-[999px] border border-slate-100 bg-white/95 p-2 shadow-[0_30px_80px_-50px_rgba(15,23,42,0.75)]">
-                <div className="flex items-center gap-4 rounded-[999px] bg-white px-6 py-3">
+              <div className="mt-4 rounded-2xl border border-slate-100 bg-white/95 p-2 shadow-[0_30px_80px_-50px_rgba(15,23,42,0.75)] sm:mt-8 sm:rounded-[999px]">
+                <div className="flex flex-col gap-3 rounded-2xl bg-white px-4 py-3 sm:flex-row sm:items-center sm:gap-4 sm:rounded-[999px] sm:px-6">
+                  <textarea
+                    ref={textareaRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Type your answer here…"
+                    className="block h-auto max-h-32 w-full flex-1 resize-none border-0 bg-transparent px-0 text-sm text-slate-900 placeholder:text-slate-400 focus-visible:ring-0 sm:hidden"
+                  />
                   <Input
                     ref={inputRef}
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="Type your answer here…"
-                    className="h-auto flex-1 border-0 bg-transparent px-0 text-lg text-slate-900 placeholder:text-slate-400 focus-visible:ring-0"
+                    className="hidden h-auto w-full flex-1 border-0 bg-transparent px-0 text-base text-slate-900 placeholder:text-slate-400 focus-visible:ring-0 sm:block sm:text-lg"
                     autoFocus
                   />
                   <Button
@@ -405,10 +427,11 @@ export function ChatInterface() {
                     disabled={!input.trim()}
                     className={cn(
                       "rounded-full bg-slate-900 px-6 text-white transition-all",
-                      !input.trim() && "opacity-50"
+                      !input.trim() && "opacity-50",
+                      "w-full justify-center sm:w-auto"
                     )}
                   >
-                    OK <CheckCircle2 className="ml-2 h-4 w-4" />
+                    Next <CircleArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </div>
               </div>

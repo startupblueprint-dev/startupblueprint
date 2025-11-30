@@ -10,12 +10,15 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/65 to-white" />
       </div>
 
-      <div className="absolute top-4 right-4 z-10">
+      <div className="absolute top-4 right-4 z-10 hidden md:block">
+        <ThemeSwitcher />
+      </div>
+      <div className="fixed inset-x-0 bottom-4 z-10 flex justify-center md:hidden">
         <ThemeSwitcher />
       </div>
 
-      <div className="relative z-10 mx-auto flex max-w-5xl flex-col gap-12 px-6 py-16 md:px-10">
-        <header className="relative overflow-hidden rounded-[32px] border border-white/70 bg-white/95 p-10 shadow-[0_30px_120px_-60px_rgba(64,112,255,0.45)]">
+      <div className="relative z-10 mx-auto flex max-w-5xl flex-col gap-12 px-6 py-6 md:px-10">
+        <header className="relative overflow-hidden rounded-[32px] border border-white/70 bg-white/95 px-6 pb-10 pt-8 shadow-[0_30px_120px_-60px_rgba(64,112,255,0.45)] md:p-10">
           <div className="absolute right-8 top-8 hidden md:block">
             <span className="inline-flex items-center gap-2 rounded-full border border-muted-foreground/20 bg-white/80 px-4 py-2 text-sm text-muted-foreground shadow-[0_15px_40px_-30px_rgba(15,23,42,0.55)]">
               <span className="h-2 w-2 rounded-full bg-sky-400" /> 2.5k+ founders joined

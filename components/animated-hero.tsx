@@ -62,12 +62,12 @@ export function AnimatedHero() {
     line3Text.length < HEADLINE_LINE3.length;
 
   return (
-    <div className="space-y-6 text-center md:text-left">
+    <div className="space-y-1 text-center md:space-y-6 md:text-left">
       <div className="space-y-4">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground sm:text-sm">
           Startup <span className="font-extrabold text-sky-600">Blueprint</span>
         </p>
-        <h1 className="text-4xl font-semibold leading-tight tracking-tight text-gray-900 md:text-5xl">
+        <h1 className="text-[1.37rem] font-semibold leading-tight tracking-tight text-gray-900 sm:text-[2.5rem] sm:leading-tight">
           <span className="block">
             {line1Text}
             {isTypingLine1 && <span className="animate-pulse">|</span>}
@@ -90,12 +90,12 @@ export function AnimatedHero() {
                   </span>
                   <svg
                     aria-hidden="true"
-                    className={`pointer-events-none absolute left-1/2 top-full -mt-2 h-6 w-[350%] -translate-x-1/2 transition-all duration-500 ${
+                    className={`pointer-events-none absolute left-1/2 top-full -mt-3 h-6 w-[105%] -translate-x-1/2 transition-all duration-500 sm:-mt-2 sm:w-[320%] ${
                       showUnderline
                         ? "opacity-100 [clip-path:inset(0_0_0_0)]"
                         : "opacity-0 [clip-path:inset(0_100%_0_0)]"
                     }`}
-                    viewBox="0 0 380 26"
+                    viewBox="0 0 320 26"
                     fill="none"
                   >
                     <defs>
@@ -112,7 +112,7 @@ export function AnimatedHero() {
                       </linearGradient>
                     </defs>
                     <path
-                      d="M5 15 C 20 6, 140 23, 200 12 S 330 21, 375 14"
+                      d="M5 15 C 20 6, 120 23, 180 12 S 280 21, 315 14"
                       stroke="url(#underlineGradient)"
                       strokeWidth="6"
                       strokeLinecap="round"
@@ -125,7 +125,7 @@ export function AnimatedHero() {
           )}
         </h1>
         <p
-          className={`pt-2 text-base text-muted-foreground md:text-lg transition-opacity duration-500 ${
+          className={`pt-2 text-sm text-muted-foreground sm:text-base md:text-lg transition-opacity duration-500 ${
             showDescription ? "opacity-100" : "opacity-0"
           }`}
         >

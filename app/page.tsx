@@ -1,7 +1,12 @@
+"use client";
+
+import { useState } from "react";
 import { AnimatedHero } from "@/components/animated-hero";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 
 export default function Home() {
+  const [showSolutions, setShowSolutions] = useState(false);
+
   return (
     <main className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-[#eef6ff] via-white to-[#dfefff] text-foreground">
       <div className="pointer-events-none absolute inset-0 opacity-90">
@@ -17,12 +22,18 @@ export default function Home() {
         <ThemeSwitcher />
       </div>
 
-      <div className="relative z-10 mx-auto flex max-w-5xl flex-col gap-12 px-6 py-6 md:px-10">
-        <header className="relative overflow-hidden rounded-[32px] border border-white/70 bg-white/95 px-6 pb-10 pt-8 shadow-[0_30px_120px_-60px_rgba(64,112,255,0.45)] md:p-10">
-          <div className="flex flex-wrap items-center justify-between gap-6">
-            <AnimatedHero />
+      <div className={`${showSolutions ? "relative z-10 flex w-full flex-col" : "relative z-10 mx-auto flex max-w-5xl flex-col gap-12 px-6 py-6 md:px-10"}`}>
+        <div
+          className={`relative overflow-hidden transition-all duration-500 ${
+            showSolutions
+              ? "w-full"
+              : "rounded-[32px] border border-white/70 bg-white/95 px-6 pb-10 pt-8 shadow-[0_30px_120px_-60px_rgba(64,112,255,0.45)] md:p-10"
+          }`}
+        >
+          <div className={`flex flex-wrap items-center justify-between ${showSolutions ? "w-full" : "gap-6"}`}>
+            <AnimatedHero onSuggestionsVisible={setShowSolutions} />
           </div>
-        </header>
+        </div>
       </div>
     </main>
   );

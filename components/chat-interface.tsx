@@ -16,19 +16,54 @@ import {
   Rocket,
   ListChecks,
   Check,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-const THINKING_FRAMES = [
-  "Thinking..",
-  "Thinking...",
-  "Thinking.",
-  "Thinking..",
-  "Thinking...",
-  "Thinking.",
-];
+type LoadingPhase = "questions" | "suggestions" | "documents";
+
+const LOADING_FRAMES: Record<LoadingPhase, string[]> = {
+  questions: ["Thinking.", "Thinking..", "Thinking..."],
+  suggestions: [
+    "Solving Problems.",
+    "Solving Problems..",
+    "Solving Problems...",
+    "Solving Problems.",
+    "Solving Problems..",
+    "Solving Problems...",
+    "Solving Problems.",
+    "Solving Problems..",
+    "Solving Problems...",
+    "Solving Problems.",
+    "Solving Problems..",
+    "Solving Problems...",
+    "Generating Solutions.",
+    "Generating Solutions..",
+    "Generating Solutions...",
+    "Generating Solutions.",
+    "Generating Solutions..",
+    "Generating Solutions...",
+    "Generating Solutions.",
+    "Generating Solutions..",
+    "Generating Solutions...",
+    "Generating Solutions.",
+    "Generating Solutions..",
+    "Generating Solutions...",            
+  ],
+  documents: [
+    "Generating Landing Page.",
+    "Generating Landing Page..",
+    "Generating Landing Page...",
+    "Developing PRD.",
+    "Developing PRD..",
+    "Developing PRD...",
+    "Almost Done.",
+    "Almost Done..",
+    "Almost Done...",
+  ],
+};
 
 type Message = {
   role: "user" | "model";
@@ -43,7 +78,11 @@ type ParsedSuggestion = {
   fields: Record<string, string | { Core?: string | string[]; Base?: string | string[] }>;
 };
 
-export function ChatInterface() {
+type ChatInterfaceProps = {
+  onSuggestionsVisible?: (visible: boolean) => void;
+};
+
+export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "model",
@@ -53,6 +92,9 @@ export function ChatInterface() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [thinkingFrameIndex, setThinkingFrameIndex] = useState(0);
+  const [loadingPhase, setLoadingPhase] = useState<LoadingPhase>("questions");
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [selectedSolution, setSelectedSolution] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -69,6 +111,8 @@ export function ChatInterface() {
     }
   }, [input]);
 
+  const loadingFrames = LOADING_FRAMES[loadingPhase];
+
   useEffect(() => {
     if (!isLoading) {
       setThinkingFrameIndex(0);
@@ -76,11 +120,11 @@ export function ChatInterface() {
     }
 
     const interval = window.setInterval(() => {
-      setThinkingFrameIndex((index) => (index + 1) % THINKING_FRAMES.length);
+      setThinkingFrameIndex((index) => (index + 1) % loadingFrames.length);
     }, 600);
 
     return () => window.clearInterval(interval);
-  }, [isLoading]);
+  }, [isLoading, loadingFrames.length, loadingFrames]);
 
   useEffect(() => {
     if (!textareaRef.current) return;
@@ -131,13 +175,94 @@ export function ChatInterface() {
     URL.revokeObjectURL(url);
   };
 
+  const handleBuildClick = (solutionNumber: number) => {
+    setSelectedSolution(solutionNumber);
+    setConfirmDialogOpen(true);
+  };
+
+  const handleConfirmBuild = async () => {
+    if (selectedSolution !== null) {
+      setConfirmDialogOpen(false);
+      
+      // Directly send the selection as a message
+      const userMessage: Message = { role: "user", content: String(selectedSolution) };
+      setMessages((prev) => [...prev, userMessage]);
+      setIsLoading(true);
+      setLoadingPhase("documents");
+
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: [...messages, userMessage],
+          }),
+        });
+
+        if (!response.ok) throw new Error("Failed to send message");
+
+        const reader = response.body?.getReader();
+        if (!reader) return;
+
+        let accumulatedResponse = "";
+        setMessages((prev) => [...prev, { role: "model", content: "" }]);
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const text = new TextDecoder().decode(value);
+          accumulatedResponse += text;
+
+          setMessages((prev) => {
+            const newMessages = [...prev];
+            const lastMsg = newMessages[newMessages.length - 1];
+            lastMsg.content = accumulatedResponse;
+            return newMessages;
+          });
+        }
+
+        const { displayContent, prdContent, landingPageContent } = extractFiles(accumulatedResponse);
+        setMessages((prev) => {
+          const newMessages = [...prev];
+          const lastMsg = newMessages[newMessages.length - 1];
+          lastMsg.content = displayContent;
+          lastMsg.prdContent = prdContent;
+          lastMsg.landingPageContent = landingPageContent;
+          return newMessages;
+        });
+      } catch (error) {
+        console.error("Error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
   const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+    const trimmedInput = input.trim();
+    if (!trimmedInput || isLoading) return;
 
     const userMessage: Message = { role: "user", content: input };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
+
+    const isSelectingSolution =
+      /^\s*[123]\s*$/.test(trimmedInput) ||
+      /solution\s*[123]/i.test(trimmedInput) ||
+      /pick\s*(solution)?\s*[123]/i.test(trimmedInput) ||
+      /choose\s*(solution)?\s*[123]/i.test(trimmedInput) ||
+      /go\s*with\s*(solution)?\s*[123]/i.test(trimmedInput) ||
+      /option\s*[123]/i.test(trimmedInput);
+
+    if (hasSuggestions && isSelectingSolution) {
+      setLoadingPhase("documents");
+    } else if (!hasSuggestions && questionNumber > 8) {
+      setLoadingPhase("suggestions");
+    } else {
+      setLoadingPhase("questions");
+    }
 
     try {
       const response = await fetch("/api/chat", {
@@ -255,16 +380,15 @@ export function ChatInterface() {
     return null;
   }, [lastModelMessage?.content]);
 
-  const suggestionFieldLabels = [
-    "Pain",
-    "Solution",
-    "Ideal Customer Profile",
-    "Business Model/Pricing",
-    "Go-to-Market Plan",
-    "Current Solutions",
-    "10x Better Opportunity",
-    "Feature List",
+  // Field pairs for 2-column layout: [left, right]
+  const suggestionFieldPairs: [string, string][] = [
+    ["Pain", "Solution"],
+    ["Ideal Customer Profile", "Go-to-Market Plan"],
+    ["Current Solutions", "10x Better Opportunity"],
+    ["Business Model/Pricing", "Feature List"],
   ];
+
+  const suggestionFieldLabels = suggestionFieldPairs.flat();
 
   const suggestionFieldIcons: Record<string, LucideIcon> = {
     Pain: AlertTriangle,
@@ -395,6 +519,11 @@ export function ChatInterface() {
   const hasDocuments =
     lastModelMessage?.prdContent !== undefined || lastModelMessage?.landingPageContent !== undefined;
 
+  // Notify parent when suggestions become visible
+  useEffect(() => {
+    onSuggestionsVisible?.(hasSuggestions);
+  }, [hasSuggestions, onSuggestionsVisible]);
+
   const isResultView =
     lastModelMessage &&
     (hasSuggestions ||
@@ -402,121 +531,155 @@ export function ChatInterface() {
       lastModelMessage.content.length > 400 ||
       lastModelMessage.content.includes("|"));
 
+  const suggestionViewClasses = hasSuggestions
+    ? "max-h-screen overflow-y-auto pr-2 sm:pr-4"
+    : "";
+
   return (
-    <div className="flex h-full w-full flex-col sm:max-w-4xl">
-      <div className="relative w-full flex-1 transition-all duration-500 ease-in-out">
+    <div className={`flex w-full flex-col ${hasSuggestions ? "min-h-screen items-center justify-center px-4 sm:px-8 py-6" : "h-full sm:max-w-4xl"}`}>
+      <div className={`relative w-full transition-all duration-500 ease-in-out ${hasSuggestions ? "max-w-4xl" : "flex-1"} ${suggestionViewClasses}`}>
         {isLoading ? (
           <div className="relative isolate flex h-full flex-col animate-in fade-in duration-500">
             <div className="flex flex-1 flex-col justify-center rounded-[40px] border border-white/70 bg-white/90 px-4 pb-6 pt-4 text-center shadow-[0_40px_140px_-90px_rgba(15,23,42,0.75)] backdrop-blur sm:p-10">
               <h2 className="text-sm font-semibold leading-tight text-sky-700 md:text-lg">
                 <span className="bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 bg-clip-text text-transparent animate-[pulse_2s_ease-in-out_infinite]">
-                  {THINKING_FRAMES[thinkingFrameIndex]}
+                  {loadingFrames[thinkingFrameIndex % loadingFrames.length]}
                 </span>
               </h2>
             </div>
           </div>
         ) : isResultView ? (
-          <div className="rounded-[36px] border border-white/60 bg-white/95 p-6 sm:p-10 shadow-[0_40px_140px_-80px_rgba(15,23,42,0.65)] backdrop-blur space-y-8 max-h-[calc(100vh-140px)] sm:max-h-[calc(100vh-200px)] overflow-y-auto pr-2 sm:pr-4">
+          <>
             {hasSuggestions ? (
-              <div className="space-y-10">
+              <>
                 {summaryContent && (
-                  <div className="prose prose-slate max-w-none text-slate-700">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{summaryContent}</ReactMarkdown>
+                  <div className="relative flex w-full flex-col rounded-3xl border border-slate-100 bg-white px-6 sm:px-[10%] py-6 pb-10 shadow-[0_30px_90px_-70px_rgba(15,23,42,0.85)]">
+                    <div className="space-y-3 pt-2 pr-0 sm:pr-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                        Pain / Solution Summary
+                      </p>
+                      <div className="prose prose-sm prose-slate max-w-none text-xs sm:text-sm text-slate-600">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{summaryContent}</ReactMarkdown>
+                      </div>
+                    </div>
                   </div>
                 )}
 
-                <div className="flex w-full flex-col gap-6">
-                  {suggestions.map((suggestion, index) => (
-                    <div
-                      key={suggestion.title + index}
-                      className="flex w-full flex-col rounded-3xl border border-slate-100 bg-white px-6 sm:px-[10%] py-6 pb-10 shadow-[0_30px_90px_-70px_rgba(15,23,42,0.85)]"
+                {suggestions.map((suggestion, index) => (
+                  <div
+                    key={suggestion.title + index}
+                    className="relative mt-6 flex w-full flex-col rounded-3xl border border-slate-100 bg-white px-6 sm:px-[10%] py-6 pb-16 shadow-[0_30px_90px_-70px_rgba(15,23,42,0.85)] first:mt-0"
+                  >
+                    <Button
+                      onClick={() => handleBuildClick(index + 1)}
+                      className="absolute right-4 top-4 gap-2 rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:bg-sky-600 hover:shadow-xl sm:right-6 sm:top-6"
                     >
-                      <div className="space-y-1">
-                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                          Solution {index + 1}
-                        </p>
-                        <h3 className="text-xl font-bold text-slate-900">{suggestion.title}</h3>
-                        {suggestion.summary && (
-                          <p className="text-sm text-slate-600">{suggestion.summary}</p>
-                        )}
-                      </div>
-                      <div className="mt-5 space-y-4 text-sm text-slate-600">
-                        {suggestionFieldLabels.map((label) => {
-                          const value = suggestion.fields[label];
+                      <Sparkles className="h-4 w-4" />
+                      Build This
+                    </Button>
+                    <div className="space-y-1 pt-6 pb-2 pr-28 sm:pr-32">
+                      <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                        Solution {index + 1}
+                      </p>
+                      <h3 className="text-xl font-bold text-slate-900">{suggestion.title}</h3>
+                      {suggestion.summary && (
+                        <p className="text-xs sm:text-sm text-slate-600">{suggestion.summary}</p>
+                      )}
+                    </div>
+                    <div className="mt-5 space-y-8 text-xs sm:text-sm text-slate-600">
+                      {suggestionFieldPairs.map(([leftLabel, rightLabel]) => {
+                        const leftValue = suggestion.fields[leftLabel];
+                        const rightValue = suggestion.fields[rightLabel];
+                        const LeftIcon = suggestionFieldIcons[leftLabel];
+                        const RightIcon = suggestionFieldIcons[rightLabel];
+
+                        const renderSimpleField = (
+                          label: string,
+                          value: any,
+                          Icon: LucideIcon | undefined
+                        ) => {
                           if (!value) return null;
-                          const Icon = suggestionFieldIcons[label];
-
-                          if (label === "Feature List") {
-                            const { core, base } = parseFeatureList(
-                              value as string | { Core?: string | string[]; Base?: string | string[] }
-                            );
-                            return (
-                              <div key={label}>
-                                <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
-                                  {Icon && <Icon className="h-4 w-4 text-sky-500" />}
-                                  {label}
-                                </p>
-                                <div className="mt-3 grid gap-4 sm:grid-cols-2">
-                                  {core.length > 0 && (
-                                    <div>
-                                      <p className="text-xs font-semibold uppercase text-slate-400">Core</p>
-                                      <ul className="mt-2 space-y-2 text-slate-700">
-                                        {core.map((item: string) => (
-                                          <li key={item} className="flex items-start gap-2 text-sm">
-                                            <Check className="mt-0.5 h-4 w-4 text-sky-500" />
-                                            <span>{item}</span>
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  )}
-                                  {base.length > 0 && (
-                                    <div>
-                                      <p className="text-xs font-semibold uppercase text-slate-400">Base</p>
-                                      <ul className="mt-2 space-y-2 text-slate-700">
-                                        {base.map((item: string) => (
-                                          <li key={item} className="flex items-start gap-2 text-sm">
-                                            <Check className="mt-0.5 h-4 w-4 text-sky-500" />
-                                            <span>{item}</span>
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          }
-
                           return (
-                            <div key={label}>
+                            <div>
                               <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
                                 {Icon && <Icon className="h-4 w-4 text-sky-500" />}
                                 {label}
                               </p>
-                              <p className="whitespace-pre-line text-slate-600">{value as string}</p>
+                              <p className="mt-1 whitespace-pre-line text-slate-600">{value as string}</p>
                             </div>
                           );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                        };
 
-                {selectionPrompt && (
-                  <div className="mt-8 rounded-2xl bg-gradient-to-r from-sky-50 to-indigo-50 p-6 text-center">
-                    <p className="text-base font-semibold text-slate-700">{selectionPrompt}</p>
-                    <p className="mt-2 text-sm text-slate-500">
-                      Type 1, 2, or 3 below to select your solution
-                    </p>
+                        const renderFeatureListBlock = (value: any) => {
+                          if (!value) return null;
+                          const { core, base } = parseFeatureList(
+                            value as string | { Core?: string | string[]; Base?: string | string[] }
+                          );
+                          return (
+                            <div className="space-y-3">
+                              <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
+                                {RightIcon && <RightIcon className="h-4 w-4 text-sky-500" />}
+                                Feature List
+                              </p>
+                              <div className="grid gap-8 sm:grid-cols-2 sm:gap-12">
+                                <div>
+                                  <p className="text-xs font-semibold uppercase text-slate-400">Core</p>
+                                  <ul className="mt-2 space-y-2 text-slate-700">
+                                    {core.length > 0 ? (
+                                      core.map((item: string) => (
+                                        <li key={item} className="flex items-start gap-2 text-sm">
+                                          <Check className="mt-0.5 h-4 w-4 text-sky-500" />
+                                          <span>{item}</span>
+                                        </li>
+                                      ))
+                                    ) : (
+                                      <li className="text-slate-500">No core features listed.</li>
+                                    )}
+                                  </ul>
+                                </div>
+                                <div>
+                                  <p className="text-xs font-semibold uppercase text-slate-400">Base</p>
+                                  <ul className="mt-2 space-y-2 text-slate-700">
+                                    {base.length > 0 ? (
+                                      base.map((item: string) => (
+                                        <li key={item} className="flex items-start gap-2 text-sm">
+                                          <Check className="mt-0.5 h-4 w-4 text-sky-500" />
+                                          <span>{item}</span>
+                                        </li>
+                                      ))
+                                    ) : (
+                                      <li className="text-slate-500">No base features listed.</li>
+                                    )}
+                                  </ul>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        };
+
+                        return (
+                          <div key={`${leftLabel}-${rightLabel}`} className="space-y-6">
+                            <div className="grid gap-8 sm:grid-cols-2 sm:gap-12">
+                              {renderSimpleField(leftLabel, leftValue, LeftIcon)}
+                              {rightLabel === "Feature List"
+                                ? <div />
+                                : renderSimpleField(rightLabel, rightValue, RightIcon)}
+                            </div>
+                            {rightLabel === "Feature List" && renderFeatureListBlock(rightValue)}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                )}
-              </div>
+                ))}
+              </>
             ) : (
-              <div className="prose prose-slate max-w-none text-slate-700">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {lastModelMessage?.content || ""}
-                </ReactMarkdown>
+              <div className="rounded-[36px] border border-white/60 bg-white/95 p-6 sm:p-10 shadow-[0_40px_140px_-80px_rgba(15,23,42,0.65)] backdrop-blur space-y-8 max-h-[calc(100vh-140px)] sm:max-h-[calc(100vh-200px)] overflow-y-auto pr-2 sm:pr-4">
+                <div className="prose prose-slate max-w-none text-slate-700">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {lastModelMessage?.content || ""}
+                  </ReactMarkdown>
+                </div>
               </div>
             )}
 
@@ -545,41 +708,46 @@ export function ChatInterface() {
               </div>
             )}
 
-            <div className="mt-8 flex items-stretch gap-0">
-              <div className="flex-1 rounded-l-[28px] bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 p-[2px] sm:rounded-l-[999px]">
-                <div className="flex h-full items-center rounded-l-[26px] bg-white/90 pl-5 pr-0 sm:rounded-l-[998px] sm:pl-4">
-                  <Input
-                    placeholder={hasSuggestions ? "Type 1, 2, or 3 to select a solution…" : "Reply to refine the plan…"}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    disabled={isLoading}
-                    className="h-auto flex-1 border-none bg-transparent px-0 text-base text-slate-900 placeholder:text-slate-400 shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                  />
+            {!hasSuggestions && (
+              <>
+                <div className="mt-8 flex items-stretch gap-0">
+                  <div className="flex-1 rounded-l-[28px] bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 p-[2px] sm:rounded-l-[999px]">
+                    <div className="flex h-full items-center rounded-l-[26px] bg-white/90 pl-5 pr-0 sm:rounded-l-[998px] sm:pl-4">
+                      <Input
+                        placeholder="Reply to refine the plan…"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        disabled={isLoading}
+                        className="h-auto flex-1 border-none bg-transparent px-0 text-base text-slate-900 placeholder:text-slate-400 shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    onClick={handleSend}
+                    disabled={isLoading || !input.trim()}
+                    data-send-button
+                    className="-ml-[3px] rounded-none rounded-r-[24px] bg-sky-500 px-5 text-white sm:-ml-[3px] sm:rounded-r-[500px] z-10 disabled:bg-slate-400 disabled:text-white disabled:opacity-100"
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
+                  <div ref={scrollRef} />
                 </div>
-              </div>
-              <Button
-                onClick={handleSend}
-                disabled={isLoading || !input.trim()}
-                className="-ml-[3px] rounded-none rounded-r-[24px] bg-sky-500 px-5 text-white sm:-ml-[3px] sm:rounded-r-[500px] z-10 disabled:bg-slate-400 disabled:text-white disabled:opacity-100"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
-              <div ref={scrollRef} />
-            </div>
 
-            <div className="mt-6 space-y-2">
-              <div className="flex items-center gap-3 text-xs font-semibold text-slate-400">
-                <div className="h-1.5 flex-1 rounded-full bg-slate-100">
-                  <div
-                    className="h-full rounded-full bg-sky-500 transition-all"
-                    style={{ width: `${Math.min((questionNumber / 8) * 100, 100)}%` }}
-                  />
+                <div className="mt-6 space-y-2">
+                  <div className="flex items-center gap-3 text-xs font-semibold text-slate-400">
+                    <div className="h-1.5 flex-1 rounded-full bg-slate-100">
+                      <div
+                        className="h-full rounded-full bg-sky-500 transition-all"
+                        style={{ width: `${Math.min((questionNumber / 8) * 100, 100)}%` }}
+                      />
+                    </div>
+                    <span className="whitespace-nowrap">{questionNumber}/8</span>
+                  </div>
                 </div>
-                <span className="whitespace-nowrap">{questionNumber}/8</span>
-              </div>
-            </div>
-          </div>
+              </>
+            )}
+          </>
         ) : (
           <div className="relative isolate flex h-full flex-col animate-in fade-in slide-in-from-bottom-8 duration-500">
             <div className="rounded-[40px] border border-white/70 bg-white/90 px-4 pb-6 pt-4 shadow-[0_40px_140px_-90px_rgba(15,23,42,0.75)] backdrop-blur sm:p-10">
@@ -634,6 +802,40 @@ export function ChatInterface() {
           </div>
         )}
       </div>
+
+      {/* Confirmation Dialog */}
+      {confirmDialogOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="mx-4 w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="text-center">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-sky-100">
+                <Sparkles className="h-7 w-7 text-sky-500" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900">
+                Build Solution {selectedSolution}?
+              </h3>
+              <p className="mt-2 text-sm text-slate-600">
+                This will generate a detailed PRD and Landing Page for your selected solution.
+              </p>
+            </div>
+            <div className="mt-8 flex gap-3">
+              <Button
+                onClick={() => setConfirmDialogOpen(false)}
+                className="flex-1 rounded-xl bg-slate-100 py-3 text-slate-700 hover:bg-slate-200"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleConfirmBuild}
+                className="flex-1 gap-2 rounded-xl bg-sky-500 py-3 text-white hover:bg-sky-600"
+              >
+                <Sparkles className="h-4 w-4" />
+                Let's Build
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

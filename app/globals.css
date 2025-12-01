@@ -61,9 +61,31 @@
 @layer base {
   * {
     @apply border-border;
+    scrollbar-width: thin;
+    scrollbar-color: #38bdf8 #e6f0ff;
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background-color: #e6f0ff;
+    border-radius: 9999px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #38bdf8, #0ea5e9);
+    border-radius: 9999px;
+    border: 2px solid #e6f0ff;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #0ea5e9, #0284c7);
   }
 }
 

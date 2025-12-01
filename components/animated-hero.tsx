@@ -21,7 +21,11 @@ const caveat = Caveat({
   weight: ["500", "600", "700"],
 });
 
-export function AnimatedHero() {
+type AnimatedHeroProps = {
+  onSuggestionsVisible?: (visible: boolean) => void;
+};
+
+export function AnimatedHero({ onSuggestionsVisible }: AnimatedHeroProps) {
   const [line1Text, setLine1Text] = useState("");
   const [line2Text, setLine2Text] = useState("");
   const [line3Text, setLine3Text] = useState("");
@@ -37,6 +41,7 @@ export function AnimatedHero() {
   const [showQuoteStrike, setShowQuoteStrike] = useState(false);
   const [showQuoteAttribution, setShowQuoteAttribution] = useState(false);
   const [showQuoteButton, setShowQuoteButton] = useState(false);
+  const [showSolutions, setShowSolutions] = useState(false);
 
   const totalLength =
     HEADLINE_LINE1.length + HEADLINE_LINE2.length + HEADLINE_LINE3.length;
@@ -118,8 +123,12 @@ export function AnimatedHero() {
     line2Text.length === HEADLINE_LINE2.length &&
     line3Text.length < HEADLINE_LINE3.length;
 
+  const rootClasses = showSolutions
+    ? "relative flex w-full flex-col min-h-screen"
+    : "relative flex w-full flex-col h-[520px] md:h-[640px]";
+
   return (
-    <div className="relative flex h-[520px] w-full flex-col md:h-[640px]">
+    <div className={rootClasses}>
       {isQuoteVisible ? (
         <div className="flex h-full flex-col justify-center text-center">
           <blockquote className={`w-full animate-in fade-in duration-700 ${caveat.className}`}>
@@ -214,13 +223,13 @@ export function AnimatedHero() {
         </div>
       ) : (
         <>
-          <div className="absolute right-0 top-0 hidden md:right-7 md:block">
+          <div className={`absolute right-0 top-0 hidden md:right-7 md:block transition-all duration-500 ${showSolutions ? "!hidden" : ""}`}>
             <span className="inline-flex items-center gap-2 rounded-full border border-muted-foreground/20 bg-white/80 px-4 py-2 text-sm text-muted-foreground shadow-[0_15px_40px_-30px_rgba(15,23,42,0.55)]">
               <span className="h-2 w-2 rounded-full bg-sky-400" /> 2.5k+ founders joined
             </span>
           </div>
           <div className="flex h-full flex-col">
-            <div className="space-y-1 pl-5 pr-5 text-center md:space-y-6 md:pl-10 md:pr-10 md:text-left">
+            <div className={`space-y-1 pl-5 pr-5 text-center md:space-y-6 md:pl-10 md:pr-10 md:text-left transition-all duration-500 ${showSolutions ? "hidden" : ""}`}>
               <div className="space-y-4">
                 <button
                   type="button"
@@ -315,14 +324,17 @@ export function AnimatedHero() {
               <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground" />
             </div>
             <div
-              className={`flex-1 pt-8 md:pt-6 transition-all duration-500 ${
+              className={`flex-1 ${showSolutions ? "pt-0" : "pt-8 md:pt-6"} transition-all duration-500 ${
                 showChat
                   ? "translate-y-0 opacity-100"
                   : "translate-y-8 opacity-0"
               }`}
             >
               <div className="flex h-full w-full">
-                <ChatInterface />
+                <ChatInterface onSuggestionsVisible={(visible) => {
+                  setShowSolutions(visible);
+                  onSuggestionsVisible?.(visible);
+                }} />
               </div>
             </div>
           </div>

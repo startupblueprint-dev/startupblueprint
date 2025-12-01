@@ -53,16 +53,39 @@ IMPORTANT for Feature List:
 Do not wrap the JSON in \`\`\`. The prd_file and landing_page_file values MUST include those XML-like tags exactly. Do not include any additional prose outside the JSON object.
 `;
 
+const shouldRetryWithFallback = (error: unknown) => {
+  if (!error) return false;
+  const status = (error as any)?.status ?? (error as any)?.response?.status;
+  if (status === 404) return true;
+  const message =
+    typeof error === "string"
+      ? error
+      : (error as Error)?.message ?? (error as any)?.response?.statusText ?? "";
+  const normalized = message.toLowerCase();
+  return normalized.includes("not found") || normalized.includes("unsupported model");
+};
+
+const streamWithModel = async (
+  modelName: string,
+  systemPrompt: string,
+  history: { role: 'user' | 'model'; parts: { text: string }[] }[],
+  currentMessage: { content: string }
+) => {
+  const model = getGeminiModel(modelName, systemPrompt);
+  const chat = model.startChat({ history });
+  return chat.sendMessageStream(currentMessage.content);
+};
+
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
     const userTurnCount = messages.filter((m: any) => m.role === 'user').length;
     const inDiscoveryPhase = userTurnCount <= 8;
-    const modelName = inDiscoveryPhase ? "gemini-2.5-flash" : "gemini-2.5-pro";
+    const modelFallbacks = inDiscoveryPhase
+      ? ["gemini-2.5-flash", "gemini-1.5-flash"]
+      : ["gemini-2.5-pro", "gemini-1.5-pro"];
     const systemPrompt = inDiscoveryPhase ? BASE_PROMPT : `${BASE_PROMPT}\n\n${FINAL_PROMPT_APPENDIX}`;
-
-    const model = getGeminiModel(modelName, systemPrompt);
 
     // Separate the last message (current user prompt) from history
     const currentMessage = messages[messages.length - 1];
@@ -90,23 +113,40 @@ export async function POST(req: Request) {
       });
     }
 
-    const chat = model.startChat({
-      history: history,
-    });
-
     const requestStart = performance.now();
-    const result = await chat.sendMessageStream(currentMessage.content);
-    
+
+    let result: Awaited<ReturnType<typeof streamWithModel>> | null = null;
+    let resolvedModelName = "";
+    let lastError: unknown;
+
+    for (const candidate of modelFallbacks) {
+      try {
+        result = await streamWithModel(candidate, systemPrompt, history, currentMessage);
+        resolvedModelName = candidate;
+        break;
+      } catch (error) {
+        lastError = error;
+        if (!shouldRetryWithFallback(error)) {
+          throw error;
+        }
+        console.warn(`[Gemini] Model ${candidate} unavailable, trying fallback`, error);
+      }
+    }
+
+    if (!result) {
+      throw lastError ?? new Error("All Gemini model attempts failed");
+    }
+
     const stream = new ReadableStream({
       async start(controller) {
         try {
-            for await (const chunk of result.stream) {
-                const chunkText = chunk.text();
-                controller.enqueue(chunkText);
-            }
-            controller.close();
+          for await (const chunk of result.stream) {
+            const chunkText = chunk.text();
+            controller.enqueue(chunkText);
+          }
+          controller.close();
         } catch (e) {
-            controller.error(e);
+          controller.error(e);
         }
       },
     });
@@ -115,7 +155,7 @@ export async function POST(req: Request) {
       headers: { "Content-Type": "text/plain; charset=utf-8" },
     });
 
-    console.log("/api/chat latency", modelName, `${(performance.now() - requestStart).toFixed(0)}ms`);
+    console.log("/api/chat latency", resolvedModelName, `${(performance.now() - requestStart).toFixed(0)}ms`);
     return response;
 
   } catch (error) {

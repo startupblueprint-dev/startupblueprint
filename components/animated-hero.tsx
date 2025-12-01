@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Caveat } from "next/font/google";
 import { ChatInterface } from "@/components/chat-interface";
+import { Heart } from "lucide-react";
 
 const HEADLINE_LINE1 = "Actually Build Something";
 const HEADLINE_LINE2 = "That Solves ";
@@ -51,11 +52,11 @@ export function AnimatedHero() {
 
     const timers = [
       setTimeout(() => setShowQuotePart1(true), 100),
-      setTimeout(() => setShowQuoteUnderline(true), 900),
-      setTimeout(() => setShowQuotePart2(true), 1500),
-      setTimeout(() => setShowQuoteStrike(true), 2100),
-      setTimeout(() => setShowQuoteAttribution(true), 2600),
-      setTimeout(() => setShowQuoteButton(true), 3200),
+      setTimeout(() => setShowQuoteUnderline(true), 600),
+      setTimeout(() => setShowQuotePart2(true), 1050),
+      setTimeout(() => setShowQuoteStrike(true), 1450),
+      setTimeout(() => setShowQuoteAttribution(true), 1850),
+      setTimeout(() => setShowQuoteButton(true), 2300),
     ];
 
     return () => timers.forEach((timer) => clearTimeout(timer));
@@ -190,7 +191,7 @@ export function AnimatedHero() {
               </span>
             </p>
             <p
-              className={`mt-6 text-sm font-semibold text-sky-600 whitespace-nowrap transition-all duration-700 sm:text-base ${
+              className={`mt-6 text-base font-semibold text-sky-600 whitespace-nowrap transition-all duration-700 sm:text-lg ${
                 showQuoteAttribution
                   ? "opacity-100 translate-y-0"
                   : "opacity-0 translate-y-2"
@@ -201,25 +202,25 @@ export function AnimatedHero() {
             <button
               type="button"
               onClick={handleQuoteContinue}
-              className={`mt-6 inline-flex items-center justify-center rounded-full bg-sky-500 px-4 py-1.5 text-xs font-semibold text-white shadow-lg transition-all duration-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-sky-500 font-sans sm:px-6 sm:py-2 sm:text-base ${
+              className={`mt-8 inline-flex items-center justify-center rounded-full bg-sky-500 px-4 py-1.5 text-xs font-semibold text-white shadow-lg transition-all duration-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-sky-500 font-sans sm:mt-8 sm:px-6 sm:py-2 sm:text-base ${
                 showQuoteButton
                   ? "opacity-100 translate-y-0"
                   : "pointer-events-none opacity-0 translate-y-2"
               }`}
             >
-              Thanks for the reminder
+              <Heart className="mr-2 h-4 w-4 translate-y-[1px] fill-white text-white" /> Thanks for the Reminder
             </button>
           </blockquote>
         </div>
       ) : (
         <>
-          <div className="absolute right-0 top-0 hidden md:block">
+          <div className="absolute right-0 top-0 hidden md:right-7 md:block">
             <span className="inline-flex items-center gap-2 rounded-full border border-muted-foreground/20 bg-white/80 px-4 py-2 text-sm text-muted-foreground shadow-[0_15px_40px_-30px_rgba(15,23,42,0.55)]">
               <span className="h-2 w-2 rounded-full bg-sky-400" /> 2.5k+ founders joined
             </span>
           </div>
           <div className="flex h-full flex-col">
-            <div className="space-y-1 text-center md:space-y-6 md:text-left">
+            <div className="space-y-1 pl-5 pr-5 text-center md:space-y-6 md:pl-10 md:pr-10 md:text-left">
               <div className="space-y-4">
                 <button
                   type="button"
@@ -320,7 +321,9 @@ export function AnimatedHero() {
                   : "translate-y-8 opacity-0"
               }`}
             >
-              <ChatInterface />
+              <div className="flex h-full w-full">
+                <ChatInterface />
+              </div>
             </div>
           </div>
         </>

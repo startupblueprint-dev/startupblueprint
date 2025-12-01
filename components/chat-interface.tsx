@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Send,
-  Loader2,
   FileText,
   CircleArrowRight,
   AlertTriangle,
@@ -18,11 +17,21 @@ import {
   Rocket,
   ListChecks,
   Check,
+  Heart,
   type LucideIcon,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
+
+const THINKING_FRAMES = [
+  "Thinking..",
+  "Thinking...",
+  "Thinking.",
+  "Thinking..",
+  "Thinking...",
+  "Thinking.",
+];
 
 type Message = {
   role: "user" | "model";
@@ -46,6 +55,7 @@ export function ChatInterface() {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [thinkingFrameIndex, setThinkingFrameIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -62,6 +72,19 @@ export function ChatInterface() {
       localStorage.setItem("pendingInput", input);
     }
   }, [input]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      setThinkingFrameIndex(0);
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      setThinkingFrameIndex((index) => (index + 1) % THINKING_FRAMES.length);
+    }, 600);
+
+    return () => window.clearInterval(interval);
+  }, [isLoading]);
 
   useEffect(() => {
     if (!textareaRef.current) return;
@@ -376,14 +399,17 @@ export function ChatInterface() {
   );
 
   return (
-    <div className="w-full sm:max-w-4xl">
-      <div className="relative w-full transition-all duration-500 ease-in-out">
+    <div className="flex h-full w-full flex-col sm:max-w-4xl">
+      <div className="relative w-full flex-1 transition-all duration-500 ease-in-out">
         {isLoading ? (
-          <div className="rounded-[36px] border border-white/60 bg-white/80 p-12 text-center shadow-[0_40px_120px_-70px_rgba(15,23,42,0.75)] backdrop-blur">
-            <div className="inline-flex items-center justify-center rounded-full bg-sky-50 p-5">
-              <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+          <div className="relative isolate flex h-full flex-col animate-in fade-in duration-500">
+            <div className="flex flex-1 flex-col justify-center rounded-[40px] border border-white/70 bg-white/90 px-4 pb-6 pt-4 text-center shadow-[0_40px_140px_-90px_rgba(15,23,42,0.75)] backdrop-blur sm:p-10">
+              <h2 className="text-sm font-semibold leading-tight text-sky-700 md:text-lg">
+                <span className="bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 bg-clip-text text-transparent animate-[pulse_2s_ease-in-out_infinite]">
+                  {THINKING_FRAMES[thinkingFrameIndex]}
+                </span>
+              </h2>
             </div>
-            <p className="mt-4 text-base font-medium text-slate-500">Blueprint is thinking…</p>
           </div>
         ) : isResultView ? (
           <div className="rounded-[36px] border border-white/60 bg-white/95 p-10 shadow-[0_40px_140px_-80px_rgba(15,23,42,0.65)] backdrop-blur space-y-8">
@@ -511,24 +537,32 @@ export function ChatInterface() {
               </div>
             )}
 
-            <div className="mt-8 flex gap-3 rounded-2xl border border-slate-100 bg-white/80 p-3">
-              <Input
-                placeholder="Reply to refine the plan…"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                disabled={isLoading}
-                className="h-auto flex-1 border-none bg-transparent px-0 text-base text-slate-900 placeholder:text-slate-400 shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-              />
-              <Button onClick={handleSend} disabled={isLoading || !input.trim()} className="rounded-full bg-sky-500 text-white">
+            <div className="mt-8 flex items-stretch gap-0">
+              <div className="flex-1 rounded-l-[28px] bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 p-[2px] sm:rounded-l-[999px]">
+                <div className="flex h-full items-center rounded-l-[26px] bg-white/90 pl-5 pr-0 sm:rounded-l-[998px] sm:pl-4">
+                  <Input
+                    placeholder="Reply to refine the plan…"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    disabled={isLoading}
+                    className="h-auto flex-1 border-none bg-transparent px-0 text-base text-slate-900 placeholder:text-slate-400 shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                  />
+                </div>
+              </div>
+              <Button
+                onClick={handleSend}
+                disabled={isLoading || !input.trim()}
+                className="-ml-[3px] rounded-none rounded-r-[24px] bg-sky-500 px-5 text-white sm:-ml-[3px] sm:rounded-r-[500px] z-10 disabled:bg-slate-400 disabled:text-white disabled:opacity-100"
+              >
                 <Send className="w-4 h-4" />
               </Button>
             </div>
             <div ref={scrollRef} />
           </div>
         ) : (
-          <div className="relative isolate animate-in fade-in slide-in-from-bottom-8 duration-500">
-            <div className="rounded-[40px] border border-white/70 bg-white/90 px-4 pb-6 pt-4 shadow-[0_40px_140px_-90px_rgba(15,23,42,0.75)] backdrop-blur sm:p-10">
+          <div className="relative isolate flex h-full flex-col animate-in fade-in slide-in-from-bottom-8 duration-500">
+            <div className="flex flex-1 flex-col justify-center rounded-[40px] border border-white/70 bg-white/90 px-4 pb-6 pt-4 shadow-[0_40px_140px_-90px_rgba(15,23,42,0.75)] backdrop-blur sm:p-10">
               
 
               <div className="text-center">
@@ -536,37 +570,35 @@ export function ChatInterface() {
                   {activeQuestionText}
                 </h2>
               </div>
-              <div className="mt-4 rounded-2xl border border-slate-100 bg-white/95 p-1 shadow-[0_30px_80px_-50px_rgba(15,23,42,0.75)] sm:mt-8 sm:rounded-[999px] sm:p-1.5">
-                <div className="flex flex-col gap-2 rounded-2xl bg-white px-3 py-1.5 sm:flex-row sm:items-center sm:gap-1 sm:rounded-[999px] sm:px-4 sm:py-1">
-                  <textarea
-                    ref={textareaRef}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Type your answer here…"
-                    className="block h-auto max-h-32 w-full flex-1 resize-none border-none bg-transparent px-0 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus-visible:ring-0 focus-visible:ring-offset-0 sm:hidden"
-                  />
-                  <Input
-                    ref={inputRef}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Type your answer here…"
-                    className="hidden h-auto w-full flex-1 border-none bg-transparent px-0 text-base text-slate-900 placeholder:text-slate-400 shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0 sm:block sm:text-lg"
-                    autoFocus
-                  />
-                  <Button
-                    onClick={handleSend}
-                    disabled={!input.trim()}
-                    className={cn(
-                      "rounded-full bg-slate-900 px-6 text-white transition-all",
-                      !input.trim() && "opacity-50",
-                      "w-full justify-center sm:w-auto"
-                    )}
-                  >
-                    Next <CircleArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
+              <div className="mt-4 flex items-stretch gap-0 sm:mt-8">
+                <div className="flex-1 rounded-l-[28px] bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 p-[2px] sm:rounded-l-[999px]">
+                  <div className="flex h-full w-full flex-wrap items-center rounded-l-[26px] bg-white/95 pl-3 pr-0 sm:flex-nowrap sm:rounded-l-[998px] sm:pl-4">
+                    <textarea
+                      ref={textareaRef}
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder="Type your answer here…"
+                      className="block h-auto max-h-32 w-full flex-1 resize-none border-none bg-transparent px-0 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus-visible:ring-0 focus-visible:ring-offset-0 sm:hidden"
+                    />
+                    <Input
+                      ref={inputRef}
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder="Type your answer here…"
+                      className="hidden h-auto w-full flex-1 border-none bg-transparent px-0 text-base text-slate-900 placeholder:text-slate-400 shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0 sm:block sm:text-lg"
+                      autoFocus
+                    />
+                  </div>
                 </div>
+                <Button
+                  onClick={handleSend}
+                  disabled={!input.trim()}
+                  className="-ml-[6px] rounded-none rounded-r-[24px] bg-slate-900 px-6 text-white transition-all shrink-0 sm:-ml-[6px] sm:rounded-r-[500px] z-10 disabled:bg-slate-400 disabled:text-white disabled:opacity-100"
+                >
+                  Next <CircleArrowRight className="ml-2 h-4 w-4" />
+                </Button>
               </div>
 
               <div className="mt-6 space-y-2">

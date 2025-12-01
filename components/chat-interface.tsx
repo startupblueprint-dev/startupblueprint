@@ -553,7 +553,7 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
             {hasSuggestions ? (
               <>
                 {summaryContent && (
-                  <div className="relative flex w-full flex-col rounded-3xl border border-slate-100 bg-white px-6 sm:px-[10%] py-6 pb-10 shadow-[0_30px_90px_-70px_rgba(15,23,42,0.85)]">
+                  <div className="relative flex w-full flex-col rounded-3xl border border-slate-100 bg-white px-8 sm:px-[10%] py-6 pb-10 shadow-[0_30px_90px_-70px_rgba(15,23,42,0.85)]">
                     <div className="space-y-3 pt-2 pr-0 sm:pr-4">
                       <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
                         Pain / Solution Summary
@@ -568,20 +568,20 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
                 {suggestions.map((suggestion, index) => (
                   <div
                     key={suggestion.title + index}
-                    className="relative mt-6 flex w-full flex-col rounded-3xl border border-slate-100 bg-white px-6 sm:px-[10%] py-6 pb-16 shadow-[0_30px_90px_-70px_rgba(15,23,42,0.85)] first:mt-0"
+                    className="relative mt-6 flex w-full flex-col rounded-3xl border border-slate-100 bg-white px-8 sm:px-[10%] py-6 pb-16 shadow-[0_30px_90px_-70px_rgba(15,23,42,0.85)] first:mt-0"
                   >
                     <Button
                       onClick={() => handleBuildClick(index + 1)}
-                      className="absolute right-4 top-4 gap-2 rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:bg-sky-600 hover:shadow-xl sm:right-6 sm:top-6"
+                      className="absolute right-4 top-4 gap-1 rounded-xl bg-sky-500 px-2.5 py-1.5 text-[0.65rem] font-semibold text-white shadow-lg transition-all hover:bg-sky-600 hover:shadow-xl sm:right-6 sm:top-6 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
                     >
-                      <Sparkles className="h-4 w-4" />
+                      <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
                       Build This
                     </Button>
-                    <div className="space-y-1 pt-6 pb-2 pr-28 sm:pr-32">
-                      <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                    <div className="space-y-1 pt-1 pb-2 pr-0 sm:pr-32 sm:pt-6">
+                      <p className="text-xs pb-4 font-semibold uppercase tracking-[0.3em] text-slate-400">
                         Solution {index + 1}
                       </p>
-                      <h3 className="text-xl font-bold text-slate-900">{suggestion.title}</h3>
+                      <h3 className="text-md font-bold text-slate-900 sm:text-xl">{suggestion.title}</h3>
                       {suggestion.summary && (
                         <p className="text-xs sm:text-sm text-slate-600">{suggestion.summary}</p>
                       )}
@@ -624,10 +624,10 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
                               <div className="grid gap-8 sm:grid-cols-2 sm:gap-12">
                                 <div>
                                   <p className="text-xs font-semibold uppercase text-slate-400">Core</p>
-                                  <ul className="mt-2 space-y-2 text-slate-700">
+                                  <ul className="mt-2 space-y-2 text-slate-700 text-xs sm:text-sm">
                                     {core.length > 0 ? (
                                       core.map((item: string) => (
-                                        <li key={item} className="flex items-start gap-2 text-sm">
+                                        <li key={item} className="flex items-start gap-2">
                                           <Check className="mt-0.5 h-4 w-4 text-sky-500" />
                                           <span>{item}</span>
                                         </li>
@@ -639,10 +639,10 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
                                 </div>
                                 <div>
                                   <p className="text-xs font-semibold uppercase text-slate-400">Base</p>
-                                  <ul className="mt-2 space-y-2 text-slate-700">
+                                  <ul className="mt-2 space-y-2 text-slate-700 text-xs sm:text-sm">
                                     {base.length > 0 ? (
                                       base.map((item: string) => (
-                                        <li key={item} className="flex items-start gap-2 text-sm">
+                                        <li key={item} className="flex items-start gap-2">
                                           <Check className="mt-0.5 h-4 w-4 text-sky-500" />
                                           <span>{item}</span>
                                         </li>

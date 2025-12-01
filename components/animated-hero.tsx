@@ -202,7 +202,7 @@ export function AnimatedHero() {
             <button
               type="button"
               onClick={handleQuoteContinue}
-              className={`mt-8 inline-flex items-center justify-center rounded-full bg-sky-500 px-4 py-1.5 text-xs font-semibold text-white shadow-lg transition-all duration-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-sky-500 font-sans sm:mt-8 sm:px-6 sm:py-2 sm:text-base ${
+              className={`mt-8 inline-flex items-center justify-center rounded-full bg-sky-500 px-4 py-1.5 text-xs font-semibold text-white shadow-lg transition-all duration-100 hover:bg-black focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-sky-500 font-sans sm:mt-8 sm:px-6 sm:py-2 sm:text-base ${
                 showQuoteButton
                   ? "opacity-100 translate-y-0"
                   : "pointer-events-none opacity-0 translate-y-2"

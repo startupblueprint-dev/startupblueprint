@@ -15,24 +15,24 @@ Do not make any response to user.
 If the user does not know at least 10 people, then ask the user if they can easily reach 10 people. If not, then start the process again from beginning.
 `;
 
-const FINAL_PROMPT_APPENDIX = `
+const SUGGESTIONS_PROMPT = `
 With the answers, suggest 3 business solutions. For each one, outline pain, solution, ideal customer profile, business model/pricing, go to market plan, current solutions, 10x better opportunity, and feature list (core + base).
 
 You must return your response STRICTLY as JSON (no commentary before or after, no code fences). Use this structure:
 {
-  "intro": "short paragraph",
+  "intro": "short paragraph summarizing the analysis",
   "suggestions": [
     {
-      "title": "",
-      "summary": "one sentence",
+      "title": "Solution Name",
+      "summary": "one sentence description",
       "fields": {
-        "Pain": "",
-        "Solution": "",
-        "Ideal Customer Profile": "",
-        "Business Model/Pricing": "",
-        "Go-to-Market Plan": "",
-        "Current Solutions": "",
-        "10x Better Opportunity": "",
+        "Pain": "description of the pain point",
+        "Solution": "description of the solution",
+        "Ideal Customer Profile": "who is the target customer",
+        "Business Model/Pricing": "how will it make money",
+        "Go-to-Market Plan": "how to reach customers",
+        "Current Solutions": "what exists today",
+        "10x Better Opportunity": "why this is significantly better",
         "Feature List": {
           "Core": ["Feature one", "Feature two"],
           "Base": ["Feature three", "Feature four"]
@@ -40,17 +40,87 @@ You must return your response STRICTLY as JSON (no commentary before or after, n
       }
     }
   ],
-  "selectionPrompt": "Ask user which suggestion they want to build",
-  "prd_file": "<PRD_FILE>...content...</PRD_FILE>",
-  "landing_page_file": "<LANDING_PAGE_FILE>...content...</LANDING_PAGE_FILE>"
+  "selectionPrompt": "Which solution would you like to build? Reply with 1, 2, or 3."
 }
 
-IMPORTANT for Feature List:
+IMPORTANT:
 - Each feature must be a complete sentence/phrase; never split a feature across array items.
 - Preserve acronyms like AI, API, ML, etc. in uppercase.
 - Do not use hyphens or line breaks inside a single feature string.
+- Do not wrap the JSON in \`\`\`.
+- Do not include any additional prose outside the JSON object.
+- Do NOT generate PRD or Landing Page content yet - wait for user to select a solution first.
+`;
 
-Do not wrap the JSON in \`\`\`. The prd_file and landing_page_file values MUST include those XML-like tags exactly. Do not include any additional prose outside the JSON object.
+const GENERATE_DOCS_PROMPT = `
+The user has selected a solution. Generate a detailed PRD (Product Requirements Document) and a Landing Page copy for the selected solution.
+
+Return your response with these exact XML-like tags:
+
+<PRD_FILE>
+# Product Requirements Document
+
+## Overview
+[Detailed product overview]
+
+## Problem Statement
+[The pain point being solved]
+
+## Solution
+[Detailed solution description]
+
+## Target Users
+[Ideal customer profile]
+
+## Features
+### Core Features
+[List of core features with descriptions]
+
+### Base Features
+[List of base features with descriptions]
+
+## Business Model
+[Pricing and revenue model]
+
+## Go-to-Market Strategy
+[How to reach customers]
+
+## Success Metrics
+[KPIs and success criteria]
+
+## Technical Requirements
+[High-level technical considerations]
+</PRD_FILE>
+
+<LANDING_PAGE_FILE>
+# [Product Name]
+
+## Hero Section
+[Compelling headline and subheadline]
+
+## Problem
+[Pain point description]
+
+## Solution
+[How the product solves it]
+
+## Features
+[Key features with benefits]
+
+## How It Works
+[Simple steps]
+
+## Pricing
+[Pricing tiers]
+
+## Call to Action
+[CTA copy]
+
+## FAQ
+[Common questions and answers]
+</LANDING_PAGE_FILE>
+
+Before the tags, include a brief confirmation message like "Great choice! Here are your documents for [Solution Name]:".
 `;
 
 const shouldRetryWithFallback = (error: unknown) => {
@@ -81,11 +151,41 @@ export async function POST(req: Request) {
     const { messages } = await req.json();
 
     const userTurnCount = messages.filter((m: any) => m.role === 'user').length;
+    const lastUserMessage = messages[messages.length - 1]?.content?.toLowerCase() || '';
+    
+    // Check if user is selecting a solution (1, 2, or 3)
+    const isSelectingSolution = /^\s*[123]\s*$/.test(lastUserMessage.trim()) || 
+      /solution\s*[123]/i.test(lastUserMessage) ||
+      /pick\s*(solution)?\s*[123]/i.test(lastUserMessage) ||
+      /choose\s*(solution)?\s*[123]/i.test(lastUserMessage) ||
+      /go\s*with\s*(solution)?\s*[123]/i.test(lastUserMessage) ||
+      /option\s*[123]/i.test(lastUserMessage);
+    
+    // Check if suggestions were already shown (look for JSON with suggestions in history)
+    const hasSuggestionsInHistory = messages.some((m: any) => 
+      m.role === 'model' && m.content?.includes('"suggestions"')
+    );
+    
     const inDiscoveryPhase = userTurnCount <= 8;
-    const modelFallbacks = inDiscoveryPhase
-      ? ["gemini-2.5-flash", "gemini-1.5-flash"]
-      : ["gemini-2.5-pro", "gemini-1.5-pro"];
-    const systemPrompt = inDiscoveryPhase ? BASE_PROMPT : `${BASE_PROMPT}\n\n${FINAL_PROMPT_APPENDIX}`;
+    const inSuggestionPhase = userTurnCount === 9 && !hasSuggestionsInHistory;
+    const inDocGenerationPhase = hasSuggestionsInHistory && isSelectingSolution;
+    
+    let systemPrompt: string;
+    let modelFallbacks: string[];
+    
+    if (inDocGenerationPhase) {
+      // User selected a solution, generate PRD and Landing Page
+      systemPrompt = `${BASE_PROMPT}\n\n${GENERATE_DOCS_PROMPT}`;
+      modelFallbacks = ["gemini-2.5-pro", "gemini-2.5-flash"];
+    } else if (inDiscoveryPhase) {
+      // Still asking questions
+      systemPrompt = BASE_PROMPT;
+      modelFallbacks = ["gemini-2.5-flash-lite", "gemini-2.5-flash"];
+    } else {
+      // Generate suggestions (after 8 questions)
+      systemPrompt = `${BASE_PROMPT}\n\n${SUGGESTIONS_PROMPT}`;
+      modelFallbacks = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
+    }
 
     // Separate the last message (current user prompt) from history
     const currentMessage = messages[messages.length - 1];

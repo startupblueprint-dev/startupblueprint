@@ -532,8 +532,8 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
       lastModelMessage.content.includes("|"));
 
   const suggestionViewClasses = hasSuggestions
-    ? "max-h-screen overflow-y-auto pr-2 sm:pr-4"
-    : "";
+    ? ""
+    : "max-h-[calc(100vh-140px)] sm:max-h-[calc(100vh-200px)] overflow-y-auto pr-2 sm:pr-4";
 
   return (
     <div className={`flex w-full flex-col ${hasSuggestions ? "min-h-screen items-center justify-center px-4 sm:px-8 py-6" : "h-full sm:max-w-4xl"}`}>
@@ -570,17 +570,19 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
                     key={suggestion.title + index}
                     className="relative mt-6 flex w-full flex-col rounded-3xl border border-slate-100 bg-white px-8 sm:px-[10%] py-6 pb-16 shadow-[0_30px_90px_-70px_rgba(15,23,42,0.85)] first:mt-0"
                   >
-                    <Button
-                      onClick={() => handleBuildClick(index + 1)}
-                      className="absolute right-4 top-4 gap-1 rounded-xl bg-sky-500 px-2.5 py-1.5 text-[0.65rem] font-semibold text-white shadow-lg transition-all hover:bg-sky-600 hover:shadow-xl sm:right-6 sm:top-6 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
-                    >
-                      <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
-                      Build This
-                    </Button>
-                    <div className="space-y-1 pt-1 pb-2 pr-0 sm:pr-32 sm:pt-6">
-                      <p className="text-xs pb-4 font-semibold uppercase tracking-[0.3em] text-slate-400">
-                        Solution {index + 1}
-                      </p>
+                    <div className="space-y-2 pt-1 pb-2 pr-0 sm:mt-4 sm:pt-0">
+                      <div className="flex w-full flex-wrap items-center gap-3 pb-2 sm:pb-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                          Solution {index + 1}
+                        </p>
+                        <Button
+                          onClick={() => handleBuildClick(index + 1)}
+                          className="ml-auto gap-1 rounded-xl bg-sky-500 px-2.5 py-1.5 text-[0.65rem] font-semibold text-white shadow-lg transition-all hover:bg-sky-600 hover:shadow-xl sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
+                        >
+                          <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
+                          Build This
+                        </Button>
+                      </div>
                       <h3 className="text-md font-bold text-slate-900 sm:text-xl">{suggestion.title}</h3>
                       {suggestion.summary && (
                         <p className="text-xs sm:text-sm text-slate-600">{suggestion.summary}</p>

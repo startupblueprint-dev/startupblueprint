@@ -21,10 +21,12 @@ With the answers, suggest 3 business solutions. For each one, outline pain, solu
 You must return your response STRICTLY as JSON (no commentary before or after, no code fences). Use this structure:
 {
   "intro": "short paragraph summarizing the analysis",
+  "problemTags": ["Tag1", "Tag2", "Tag3"],
   "suggestions": [
     {
       "title": "Solution Name",
       "summary": "one sentence description",
+      "tags": ["Tag1", "Tag2", "Tag3"],
       "fields": {
         "Pain": "description of the pain point",
         "Solution": "description of the solution",
@@ -50,6 +52,8 @@ IMPORTANT:
 - Do not wrap the JSON in \`\`\`.
 - Do not include any additional prose outside the JSON object.
 - Do NOT generate PRD or Landing Page content yet - wait for user to select a solution first.
+- "problemTags" should be 3 short, relevant category tags (e.g., "Healthcare", "B2B SaaS", "Automation") that describe the problem space based on user answers.
+- Each suggestion's "tags" should be 3 short, relevant category tags (e.g., "AI-Powered", "Enterprise", "Analytics") that describe that specific solution.
 `;
 
 const GENERATE_DOCS_PROMPT = `

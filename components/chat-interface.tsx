@@ -76,6 +76,7 @@ type Message = {
 type ParsedSuggestion = {
   title: string;
   summary?: string;
+  tags?: string[];
   fields: Record<string, string | { Core?: string | string[]; Base?: string | string[] }>;
 };
 
@@ -459,6 +460,7 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
       return structuredPayload.suggestions.map((item: any) => ({
         title: item.title ?? "",
         summary: item.summary ?? "",
+        tags: item.tags ?? [],
         fields: item.fields ?? {},
       }));
     }
@@ -516,6 +518,7 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
   }, [structuredPayload, lastModelMessage?.content, suggestions.length]);
 
   const selectionPrompt = structuredPayload?.selectionPrompt ?? "";
+  const problemTags: string[] = structuredPayload?.problemTags ?? [];
 
   const hasSuggestions = suggestions.length > 0;
   const hasDocuments =
@@ -564,6 +567,18 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
                       <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
                         Pain / Solution Summary
                       </p>
+                      {problemTags.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {problemTags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="inline-flex items-center rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700 ring-1 ring-inset ring-sky-600/20"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                       <div className="prose prose-sm prose-slate max-w-none text-xs sm:text-sm text-slate-600">
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>{summaryContent}</ReactMarkdown>
                       </div>
@@ -589,6 +604,18 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
                           Build This
                         </Button>
                       </div>
+                      {suggestion.tags && suggestion.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-2 pt-1 pb-1.5">
+                          {suggestion.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-600/20"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                       <h3 className="text-md font-bold text-slate-900 sm:text-xl">{suggestion.title}</h3>
                       {suggestion.summary && (
                         <p className="text-xs sm:text-sm text-slate-600">{suggestion.summary}</p>

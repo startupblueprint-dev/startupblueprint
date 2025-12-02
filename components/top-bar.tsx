@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { LogoutButton } from "@/components/logout-button";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 type TopBarProps = {
@@ -11,6 +14,26 @@ type TopBarProps = {
 };
 
 export function TopBar({ fullWidth = false, className }: TopBarProps) {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    supabase.auth.getUser().then(({ data }) => {
+      setIsLoggedIn(Boolean(data?.user));
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_, session) => {
+      setIsLoggedIn(Boolean(session));
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
   return (
     <div
       className={cn(
@@ -29,13 +52,17 @@ export function TopBar({ fullWidth = false, className }: TopBarProps) {
             Startup <span className="font-extrabold text-sky-600">Blueprint</span>
           </button>
         </div>
-        <Button
-          asChild
-          variant="ghost"
-          className="ml-auto px-0 text-sm font-semibold text-slate-500 transition-colors hover:bg-transparent hover:text-sky-600 focus-visible:bg-transparent"
-        >
-          <Link href="/auth/login">Login</Link>
-        </Button>
+        {isLoggedIn ? (
+          <LogoutButton className="ml-auto" />
+        ) : (
+          <Button
+            asChild
+            variant="ghost"
+            className="ml-auto px-0 text-sm font-semibold text-slate-500 transition-colors hover:bg-transparent hover:text-sky-600 focus-visible:bg-transparent"
+          >
+            <Link href="/auth/login">Login</Link>
+          </Button>
+        )}
       </div>
     </div>
   );

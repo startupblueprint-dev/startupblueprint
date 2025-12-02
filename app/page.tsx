@@ -39,7 +39,11 @@ export default function Home() {
             : "mx-auto max-w-5xl px-4 pb-10 md:px-10"
         }`}
       >
-        <div className={topBarClasses}>
+        <div
+          className={`${topBarClasses} ${
+            showSolutions ? "mx-auto w-full max-w-5xl px-8 sm:px-16" : ""
+          }`}
+        >
           <TopBar fullWidth={showSolutions} />
         </div>
         <div

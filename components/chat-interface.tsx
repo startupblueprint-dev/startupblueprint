@@ -17,6 +17,8 @@ import {
   ListChecks,
   Check,
   Sparkles,
+  ChevronLeft,
+  ChevronRight,
   type LucideIcon,
 } from "lucide-react";
 import { createPortal } from "react-dom";
@@ -99,10 +101,12 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
   const [selectedSolution, setSelectedSolution] = useState<number | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [currentSolutionIndex, setCurrentSolutionIndex] = useState(0);
   const [isSavingSession, setIsSavingSession] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const solutionCardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!isLoading && inputRef.current) {
@@ -602,9 +606,14 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
     ? ""
     : "max-h-[calc(100vh-140px)] sm:max-h-[calc(100vh-200px)] overflow-y-auto pr-2 sm:pr-4";
 
+  useEffect(() => {
+    if (!hasSuggestions) return;
+    solutionCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [currentSolutionIndex, hasSuggestions]);
+
   return (
-    <div className={`flex w-full flex-col ${hasSuggestions ? "min-h-screen items-center justify-center px-4 sm:px-8 py-6" : "h-full sm:max-w-4xl"}`}>
-      <div className={`relative w-full transition-all duration-500 ease-in-out ${hasSuggestions ? "max-w-4xl" : "flex-1"} ${suggestionViewClasses}`}>
+    <div className={`flex w-full flex-col ${hasSuggestions ? "min-h-screen items-center justify-center px-4 sm:px-10 py-6" : "h-full sm:max-w-4xl"}`}>
+      <div className={`relative w-full transition-all duration-500 ease-in-out ${hasSuggestions ? "max-w-5xl" : "flex-1"} ${suggestionViewClasses}`}>
         {isLoading ? (
           <div className="relative isolate flex h-full flex-col animate-in fade-in duration-500">
             <div className="flex flex-1 flex-col justify-center px-4 pb-6 pt-4 text-center sm:p-10">
@@ -618,10 +627,11 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
         ) : isResultView ? (
           <>
             {hasSuggestions ? (
-              <>
+              <div className="space-y-6 px-8 sm:px-16">
+                {/* Sticky Summary Card */}
                 {summaryContent && (
-                  <div className="relative flex w-full flex-col rounded-3xl border border-slate-100 bg-white px-8 sm:px-[10%] py-6 pb-10 shadow-[0_30px_90px_-70px_rgba(15,23,42,0.85)]">
-                    <div className="space-y-3 pt-2 pr-0 sm:pr-4">
+                  <div className="sticky top-0 z-10 rounded-3xl border border-slate-100 bg-white px-6 sm:px-12 lg:px-20 py-6 pb-8 shadow-[0_30px_90px_-70px_rgba(15,23,42,0.85)]">
+                    <div className="space-y-3 pt-2">
                       <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
                         Pain / Solution Summary
                       </p>
@@ -644,128 +654,165 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
                   </div>
                 )}
 
-                {suggestions.map((suggestion, index) => (
-                  <div
-                    key={suggestion.title + index}
-                    className="relative mt-6 flex w-full flex-col rounded-3xl border border-slate-100 bg-white px-8 sm:px-[10%] py-6 pb-16 shadow-[0_30px_90px_-70px_rgba(15,23,42,0.85)] first:mt-0"
-                  >
-                    <div className="space-y-2 pt-1 pb-2 pr-0 sm:mt-4 sm:pt-0">
-                      <div className="flex w-full flex-wrap items-center gap-3 pb-2 sm:pb-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                          Solution {index + 1}
-                        </p>
-                        <Button
-                          onClick={() => handleBuildClick(index + 1)}
-                          className="ml-auto gap-1 rounded-xl bg-sky-500 px-2.5 py-1.5 text-[0.65rem] font-semibold text-white shadow-lg transition-all hover:bg-sky-600 hover:shadow-xl sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
-                        >
-                          <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
-                          Build This
-                        </Button>
-                      </div>
-                      {suggestion.tags && suggestion.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-2 pt-1 pb-1.5">
-                          {suggestion.tags.map((tag) => (
-                            <span
-                              key={tag}
-                              className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-600/20"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      <h3 className="text-md font-bold text-slate-900 sm:text-xl">{suggestion.title}</h3>
-                      {suggestion.summary && (
-                        <p className="text-xs sm:text-sm text-slate-600">{suggestion.summary}</p>
-                      )}
+                {/* Solution Carousel with Navigation */}
+                {suggestions.length > 0 && (
+                  <div className="relative">
+                    {/* Left Navigation Button */}
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center">
+                      <button
+                        onClick={() => setCurrentSolutionIndex((prev) => Math.max(0, prev - 1))}
+                        disabled={currentSolutionIndex === 0}
+                        className="pointer-events-auto -translate-x-[90%] sm:-translate-x-[120%] flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-lg border border-slate-200 text-slate-600 transition-all hover:bg-slate-50 hover:shadow-xl disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:shadow-lg"
+                        aria-label="Previous solution"
+                      >
+                        <ChevronLeft className="h-6 w-6" />
+                      </button>
                     </div>
-                    <div className="mt-5 space-y-8 text-xs sm:text-sm text-slate-600">
-                      {suggestionFieldPairs.map(([leftLabel, rightLabel]) => {
-                        const leftValue = suggestion.fields[leftLabel];
-                        const rightValue = suggestion.fields[rightLabel];
-                        const LeftIcon = suggestionFieldIcons[leftLabel];
-                        const RightIcon = suggestionFieldIcons[rightLabel];
 
-                        const renderSimpleField = (
-                          label: string,
-                          value: any,
-                          Icon: LucideIcon | undefined
-                        ) => {
-                          if (!value) return null;
-                          return (
-                            <div>
-                              <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
-                                {Icon && <Icon className="h-4 w-4 text-sky-500" />}
-                                {label}
-                              </p>
-                              <p className="mt-1 whitespace-pre-line text-slate-600">{value as string}</p>
-                            </div>
-                          );
-                        };
-
-                        const renderFeatureListBlock = (value: any) => {
-                          if (!value) return null;
-                          const { core, base } = parseFeatureList(
-                            value as string | { Core?: string | string[]; Base?: string | string[] }
-                          );
-                          return (
-                            <div className="space-y-3">
-                              <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
-                                {RightIcon && <RightIcon className="h-4 w-4 text-sky-500" />}
-                                Feature List
-                              </p>
-                              <div className="grid gap-8 sm:grid-cols-2 sm:gap-12">
-                                <div>
-                                  <p className="text-xs font-semibold uppercase text-slate-400">Core</p>
-                                  <ul className="mt-2 space-y-2 text-slate-700 text-xs sm:text-sm">
-                                    {core.length > 0 ? (
-                                      core.map((item: string) => (
-                                        <li key={item} className="flex items-start gap-2">
-                                          <Check className="mt-0.5 h-4 w-4 text-sky-500" />
-                                          <span>{item}</span>
-                                        </li>
-                                      ))
-                                    ) : (
-                                      <li className="text-slate-500">No core features listed.</li>
-                                    )}
-                                  </ul>
-                                </div>
-                                <div>
-                                  <p className="text-xs font-semibold uppercase text-slate-400">Base</p>
-                                  <ul className="mt-2 space-y-2 text-slate-700 text-xs sm:text-sm">
-                                    {base.length > 0 ? (
-                                      base.map((item: string) => (
-                                        <li key={item} className="flex items-start gap-2">
-                                          <Check className="mt-0.5 h-4 w-4 text-sky-500" />
-                                          <span>{item}</span>
-                                        </li>
-                                      ))
-                                    ) : (
-                                      <li className="text-slate-500">No base features listed.</li>
-                                    )}
-                                  </ul>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        };
-
+                    {/* Solution Card */}
+                    <div className="flex-1 min-w-0">
+                      {(() => {
+                        const suggestion = suggestions[currentSolutionIndex];
+                        const index = currentSolutionIndex;
                         return (
-                          <div key={`${leftLabel}-${rightLabel}`} className="space-y-6">
-                            <div className="grid gap-8 sm:grid-cols-2 sm:gap-12">
-                              {renderSimpleField(leftLabel, leftValue, LeftIcon)}
-                              {rightLabel === "Feature List"
-                                ? <div />
-                                : renderSimpleField(rightLabel, rightValue, RightIcon)}
+                          <div
+                            key={suggestion.title + index}
+                            ref={solutionCardRef}
+                            className="relative flex w-full flex-col rounded-3xl border border-slate-100 bg-white px-6 sm:px-12 lg:px-20 py-6 pb-16 shadow-[0_30px_90px_-70px_rgba(15,23,42,0.85)]"
+                          >
+                            <div className="space-y-2 pt-1 pb-2 pr-0 sm:mt-4 sm:pt-0">
+                              <div className="flex w-full flex-wrap items-center gap-3 pb-2 sm:pb-4">
+                                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                                  Solution {index + 1} of {suggestions.length}
+                                </p>
+                                <Button
+                                  onClick={() => handleBuildClick(index + 1)}
+                                  className="ml-auto gap-1 rounded-xl bg-sky-500 px-2.5 py-1.5 text-[0.65rem] font-semibold text-white shadow-lg transition-all hover:bg-sky-600 hover:shadow-xl sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
+                                >
+                                  <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
+                                  Build This
+                                </Button>
+                              </div>
+                              {suggestion.tags && suggestion.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-2 pt-1 pb-1.5">
+                                  {suggestion.tags.map((tag) => (
+                                    <span
+                                      key={tag}
+                                      className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-600/20"
+                                    >
+                                      {tag}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                              <h3 className="text-md font-bold text-slate-900 sm:text-xl">{suggestion.title}</h3>
+                              {suggestion.summary && (
+                                <p className="text-xs sm:text-sm text-slate-600">{suggestion.summary}</p>
+                              )}
                             </div>
-                            {rightLabel === "Feature List" && renderFeatureListBlock(rightValue)}
+                            <div className="mt-5 space-y-8 text-xs sm:text-sm text-slate-600">
+                              {suggestionFieldPairs.map(([leftLabel, rightLabel]) => {
+                                const leftValue = suggestion.fields[leftLabel];
+                                const rightValue = suggestion.fields[rightLabel];
+                                const LeftIcon = suggestionFieldIcons[leftLabel];
+                                const RightIcon = suggestionFieldIcons[rightLabel];
+
+                                const renderSimpleField = (
+                                  label: string,
+                                  value: any,
+                                  Icon: LucideIcon | undefined
+                                ) => {
+                                  if (!value) return null;
+                                  return (
+                                    <div>
+                                      <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
+                                        {Icon && <Icon className="h-4 w-4 text-sky-500" />}
+                                        {label}
+                                      </p>
+                                      <p className="mt-1 whitespace-pre-line text-slate-600">{value as string}</p>
+                                    </div>
+                                  );
+                                };
+
+                                const renderFeatureListBlock = (value: any) => {
+                                  if (!value) return null;
+                                  const { core, base } = parseFeatureList(
+                                    value as string | { Core?: string | string[]; Base?: string | string[] }
+                                  );
+                                  return (
+                                    <div className="space-y-3">
+                                      <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
+                                        {RightIcon && <RightIcon className="h-4 w-4 text-sky-500" />}
+                                        Feature List
+                                      </p>
+                                      <div className="grid gap-8 sm:grid-cols-2 sm:gap-12">
+                                        <div>
+                                          <p className="text-xs font-semibold uppercase text-slate-400">Core</p>
+                                          <ul className="mt-2 space-y-2 text-slate-700 text-xs sm:text-sm">
+                                            {core.length > 0 ? (
+                                              core.map((item: string) => (
+                                                <li key={item} className="flex items-start gap-2">
+                                                  <Check className="mt-0.5 h-4 w-4 text-sky-500" />
+                                                  <span>{item}</span>
+                                                </li>
+                                              ))
+                                            ) : (
+                                              <li className="text-slate-500">No core features listed.</li>
+                                            )}
+                                          </ul>
+                                        </div>
+                                        <div>
+                                          <p className="text-xs font-semibold uppercase text-slate-400">Base</p>
+                                          <ul className="mt-2 space-y-2 text-slate-700 text-xs sm:text-sm">
+                                            {base.length > 0 ? (
+                                              base.map((item: string) => (
+                                                <li key={item} className="flex items-start gap-2">
+                                                  <Check className="mt-0.5 h-4 w-4 text-sky-500" />
+                                                  <span>{item}</span>
+                                                </li>
+                                              ))
+                                            ) : (
+                                              <li className="text-slate-500">No base features listed.</li>
+                                            )}
+                                          </ul>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                };
+
+                                return (
+                                  <div key={`${leftLabel}-${rightLabel}`} className="space-y-6">
+                                    <div className="grid gap-8 sm:grid-cols-2 sm:gap-12">
+                                      {renderSimpleField(leftLabel, leftValue, LeftIcon)}
+                                      {rightLabel === "Feature List"
+                                        ? <div />
+                                        : renderSimpleField(rightLabel, rightValue, RightIcon)}
+                                    </div>
+                                    {rightLabel === "Feature List" && renderFeatureListBlock(rightValue)}
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
                         );
-                      })}
+                      })()}
+                    </div>
+
+                    {/* Right Navigation Button */}
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center justify-end">
+                      <button
+                        onClick={() => setCurrentSolutionIndex((prev) => Math.min(suggestions.length - 1, prev + 1))}
+                        disabled={currentSolutionIndex === suggestions.length - 1}
+                        className="pointer-events-auto translate-x-[90%] sm:translate-x-[120%] flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-lg border border-slate-200 text-slate-600 transition-all hover:bg-slate-50 hover:shadow-xl disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:shadow-lg"
+                        aria-label="Next solution"
+                      >
+                        <ChevronRight className="h-6 w-6" />
+                      </button>
                     </div>
                   </div>
-                ))}
-              </>
+                )}
+              </div>
             ) : (
               <div className="p-6 sm:p-10 space-y-8 max-h-[calc(100vh-140px)] sm:max-h-[calc(100vh-200px)] overflow-y-auto pr-2 sm:pr-4">
                 <div className="prose prose-slate max-w-none text-slate-700">

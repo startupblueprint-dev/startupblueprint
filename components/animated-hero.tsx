@@ -227,7 +227,7 @@ export function AnimatedHero({ onSuggestionsVisible, onQuoteComplete }: Animated
         <>
           <div className={`absolute right-0 top-0 hidden md:right-7 md:block transition-all duration-500 ${showSolutions ? "!hidden" : ""}`}>
             <span className="inline-flex items-center gap-2 rounded-full border border-muted-foreground/20 bg-white px-4 py-2 text-sm text-muted-foreground shadow-[0_15px_40px_-30px_rgba(15,23,42,0.55)]">
-              <span className="h-2 w-2 rounded-full bg-sky-400" /> 2.5k+ founders joined
+              <span className="h-2 w-2 rounded-full bg-sky-400" /> Built for Founders
             </span>
           </div>
           <div className="flex h-full flex-col">

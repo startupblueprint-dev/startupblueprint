@@ -929,7 +929,7 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={handleKeyDown}
-                      placeholder="Type your answer here…"
+                      placeholder="Provide your insights here…"
                       className="block h-auto max-h-32 w-full flex-1 resize-none border-none bg-transparent px-0 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus-visible:ring-0 focus-visible:ring-offset-0 sm:hidden"
                     />
                     <Input
@@ -937,7 +937,7 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={handleKeyDown}
-                      placeholder="Type your answer here…"
+                      placeholder="Provide your insights here…"
                       className="hidden h-auto w-full flex-1 border-none bg-transparent px-0 text-base text-slate-900 placeholder:text-slate-400 shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0 sm:block sm:text-lg"
                       autoFocus
                     />

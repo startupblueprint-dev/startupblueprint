@@ -19,6 +19,7 @@ import {
   Sparkles,
   type LucideIcon,
 } from "lucide-react";
+import { createPortal } from "react-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -95,6 +96,7 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
   const [loadingPhase, setLoadingPhase] = useState<LoadingPhase>("questions");
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [selectedSolution, setSelectedSolution] = useState<number | null>(null);
+  const [isClient, setIsClient] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -524,6 +526,10 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
     onSuggestionsVisible?.(hasSuggestions);
   }, [hasSuggestions, onSuggestionsVisible]);
 
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const isResultView =
     lastModelMessage &&
     (hasSuggestions ||
@@ -710,7 +716,7 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
               </div>
             )}
 
-            {!hasSuggestions && (
+            {!hasSuggestions && !hasDocuments && loadingPhase !== "documents" && (
               <>
                 <div className="mt-8 flex items-stretch gap-0">
                   <div className="flex-1 rounded-l-[28px] bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 p-[2px] sm:rounded-l-[999px]">
@@ -806,38 +812,42 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
       </div>
 
       {/* Confirmation Dialog */}
-      {confirmDialogOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="mx-4 w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="text-center">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-sky-100">
-                <Sparkles className="h-7 w-7 text-sky-500" />
+      {isClient &&
+        createPortal(
+          confirmDialogOpen ? (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+              <div className="mx-4 w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+                <div className="text-center">
+                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-sky-100">
+                    <Sparkles className="h-7 w-7 text-sky-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900">
+                    Build Solution {selectedSolution}?
+                  </h3>
+                  <p className="mt-2 text-sm text-slate-600">
+                    This will generate a detailed PRD and Landing Page for your selected solution.
+                  </p>
+                </div>
+                <div className="mt-8 flex gap-3">
+                  <Button
+                    onClick={() => setConfirmDialogOpen(false)}
+                    className="flex-1 rounded-xl bg-slate-100 py-3 text-slate-700 hover:bg-slate-200"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleConfirmBuild}
+                    className="flex-1 gap-2 rounded-xl bg-sky-500 py-3 text-white hover:bg-sky-600"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    Let's Build
+                  </Button>
+                </div>
               </div>
-              <h3 className="text-xl font-bold text-slate-900">
-                Build Solution {selectedSolution}?
-              </h3>
-              <p className="mt-2 text-sm text-slate-600">
-                This will generate a detailed PRD and Landing Page for your selected solution.
-              </p>
             </div>
-            <div className="mt-8 flex gap-3">
-              <Button
-                onClick={() => setConfirmDialogOpen(false)}
-                className="flex-1 rounded-xl bg-slate-100 py-3 text-slate-700 hover:bg-slate-200"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleConfirmBuild}
-                className="flex-1 gap-2 rounded-xl bg-sky-500 py-3 text-white hover:bg-sky-600"
-              >
-                <Sparkles className="h-4 w-4" />
-                Let's Build
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+          ) : null,
+          document.body
+        )}
     </div>
   );
 }

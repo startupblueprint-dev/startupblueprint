@@ -23,9 +23,10 @@ const caveat = Caveat({
 
 type AnimatedHeroProps = {
   onSuggestionsVisible?: (visible: boolean) => void;
+  onQuoteComplete?: () => void;
 };
 
-export function AnimatedHero({ onSuggestionsVisible }: AnimatedHeroProps) {
+export function AnimatedHero({ onSuggestionsVisible, onQuoteComplete }: AnimatedHeroProps) {
   const [line1Text, setLine1Text] = useState("");
   const [line2Text, setLine2Text] = useState("");
   const [line3Text, setLine3Text] = useState("");
@@ -70,6 +71,7 @@ export function AnimatedHero({ onSuggestionsVisible }: AnimatedHeroProps) {
   const handleQuoteContinue = () => {
     setIsQuoteVisible(false);
     setQuoteHasFinished(true);
+    onQuoteComplete?.();
   };
 
   useEffect(() => {

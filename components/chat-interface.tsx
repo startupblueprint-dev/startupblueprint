@@ -98,6 +98,8 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [selectedSolution, setSelectedSolution] = useState<number | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isSavingSession, setIsSavingSession] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -234,6 +236,23 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
           lastMsg.landingPageContent = landingPageContent;
           return newMessages;
         });
+
+        // Save selected solution and documents to database
+        if (sessionId && (prdContent || landingPageContent)) {
+          try {
+            await fetch(`/api/sessions/${sessionId}/select`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                solutionPosition: selectedSolution,
+                prdContent,
+                landingPageContent,
+              }),
+            });
+          } catch (saveError) {
+            console.error("Error saving selection:", saveError);
+          }
+        }
       } catch (error) {
         console.error("Error:", error);
       } finally {
@@ -529,6 +548,45 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
     onSuggestionsVisible?.(hasSuggestions);
   }, [hasSuggestions, onSuggestionsVisible]);
 
+  // Save session to database when suggestions are first generated
+  useEffect(() => {
+    const saveSession = async () => {
+      if (!structuredPayload || sessionId || isSavingSession) return;
+      if (!structuredPayload.suggestions?.length) return;
+
+      setIsSavingSession(true);
+      try {
+        const response = await fetch("/api/sessions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            intro: structuredPayload.intro || summaryContent,
+            problemTags: structuredPayload.problemTags || [],
+            suggestions: structuredPayload.suggestions,
+            conversationHistory: messages.map((m) => ({
+              role: m.role,
+              content: m.content,
+            })),
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setSessionId(data.sessionId);
+          console.log("Session saved:", data.sessionId);
+        } else {
+          console.error("Failed to save session");
+        }
+      } catch (error) {
+        console.error("Error saving session:", error);
+      } finally {
+        setIsSavingSession(false);
+      }
+    };
+
+    saveSession();
+  }, [structuredPayload, sessionId, isSavingSession, summaryContent, messages]);
+
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -549,7 +607,7 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
       <div className={`relative w-full transition-all duration-500 ease-in-out ${hasSuggestions ? "max-w-4xl" : "flex-1"} ${suggestionViewClasses}`}>
         {isLoading ? (
           <div className="relative isolate flex h-full flex-col animate-in fade-in duration-500">
-            <div className="flex flex-1 flex-col justify-center rounded-[40px] border border-white/70 bg-white/90 px-4 pb-6 pt-4 text-center shadow-[0_40px_140px_-90px_rgba(15,23,42,0.75)] backdrop-blur sm:p-10">
+            <div className="flex flex-1 flex-col justify-center px-4 pb-6 pt-4 text-center sm:p-10">
               <h2 className="text-sm font-semibold leading-tight text-sky-700 md:text-lg">
                 <span className="bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 bg-clip-text text-transparent animate-[pulse_2s_ease-in-out_infinite]">
                   {loadingFrames[thinkingFrameIndex % loadingFrames.length]}
@@ -709,7 +767,7 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
                 ))}
               </>
             ) : (
-              <div className="rounded-[36px] border border-white/60 bg-white/95 p-6 sm:p-10 shadow-[0_40px_140px_-80px_rgba(15,23,42,0.65)] backdrop-blur space-y-8 max-h-[calc(100vh-140px)] sm:max-h-[calc(100vh-200px)] overflow-y-auto pr-2 sm:pr-4">
+              <div className="p-6 sm:p-10 space-y-8 max-h-[calc(100vh-140px)] sm:max-h-[calc(100vh-200px)] overflow-y-auto pr-2 sm:pr-4">
                 <div className="prose prose-slate max-w-none text-slate-700">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {lastModelMessage?.content || ""}
@@ -747,7 +805,7 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
               <>
                 <div className="mt-8 flex items-stretch gap-0">
                   <div className="flex-1 rounded-l-[28px] bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 p-[2px] sm:rounded-l-[999px]">
-                    <div className="flex h-full items-center rounded-l-[26px] bg-white/90 pl-5 pr-0 sm:rounded-l-[998px] sm:pl-4">
+                    <div className="flex h-full items-center rounded-l-[26px] bg-white pl-5 pr-0 sm:rounded-l-[998px] sm:pl-4">
                       <Input
                         placeholder="Reply to refine the plan…"
                         value={input}
@@ -785,7 +843,7 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
           </>
         ) : (
           <div className="relative isolate flex h-full flex-col animate-in fade-in slide-in-from-bottom-8 duration-500">
-            <div className="rounded-[40px] border border-white/70 bg-white/90 px-4 pb-6 pt-4 shadow-[0_40px_140px_-90px_rgba(15,23,42,0.75)] backdrop-blur sm:p-10">
+            <div className="px-4 pb-6 pt-4 sm:p-10">
               <div className="text-center">
                 <h2 className="text-sm font-semibold leading-tight text-sky-700 md:text-lg">
                   {activeQuestionText}
@@ -793,7 +851,7 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
               </div>
               <div className="mt-4 flex items-stretch gap-0 sm:mt-8">
                 <div className="flex-1 rounded-l-[28px] bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 p-[2px] sm:rounded-l-[999px]">
-                  <div className="flex h-full w-full flex-wrap items-center rounded-l-[26px] bg-white/95 pl-3 pr-0 sm:flex-nowrap sm:rounded-l-[998px] sm:pl-4">
+                  <div className="flex h-full w-full flex-wrap items-center rounded-l-[26px] bg-white pl-3 pr-0 sm:flex-nowrap sm:rounded-l-[998px] sm:pl-4">
                     <textarea
                       ref={textareaRef}
                       value={input}

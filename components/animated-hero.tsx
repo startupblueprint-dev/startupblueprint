@@ -224,20 +224,13 @@ export function AnimatedHero({ onSuggestionsVisible }: AnimatedHeroProps) {
       ) : (
         <>
           <div className={`absolute right-0 top-0 hidden md:right-7 md:block transition-all duration-500 ${showSolutions ? "!hidden" : ""}`}>
-            <span className="inline-flex items-center gap-2 rounded-full border border-muted-foreground/20 bg-white/80 px-4 py-2 text-sm text-muted-foreground shadow-[0_15px_40px_-30px_rgba(15,23,42,0.55)]">
+            <span className="inline-flex items-center gap-2 rounded-full border border-muted-foreground/20 bg-white px-4 py-2 text-sm text-muted-foreground shadow-[0_15px_40px_-30px_rgba(15,23,42,0.55)]">
               <span className="h-2 w-2 rounded-full bg-sky-400" /> 2.5k+ founders joined
             </span>
           </div>
           <div className="flex h-full flex-col">
             <div className={`space-y-1 pl-5 pr-5 text-center md:space-y-6 md:pl-10 md:pr-10 md:text-left transition-all duration-500 ${showSolutions ? "hidden" : ""}`}>
               <div className="space-y-4">
-                <button
-                  type="button"
-                  onClick={() => window.location.reload()}
-                  className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 sm:text-sm"
-                >
-                  Startup <span className="font-extrabold text-sky-600">Blueprint</span>
-                </button>
                 <h1 className="text-[clamp(1rem,6vw,1.37rem)] font-semibold leading-tight tracking-tight text-gray-900 sm:text-[2.5rem] sm:leading-tight">
                   <span className="block whitespace-nowrap sm:whitespace-normal">
                     {line1Text}

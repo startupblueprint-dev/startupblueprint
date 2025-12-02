@@ -33,11 +33,32 @@ export function LoginForm({
     setError(null);
 
     try {
+      // Check if current user is anonymous before signing in
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const wasAnonymous = currentUser?.is_anonymous ?? false;
+      const anonymousUserId = wasAnonymous ? currentUser?.id : null;
+
+      // Sign in with password
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       if (error) throw error;
+
+      // If user was anonymous, reassign their sessions to the new account
+      if (wasAnonymous && anonymousUserId) {
+        try {
+          await fetch("/api/auth/link-anonymous", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ anonymousUserId }),
+          });
+        } catch (linkError) {
+          // Non-critical error - user is logged in, just couldn't migrate data
+          console.error("Failed to link anonymous sessions:", linkError);
+        }
+      }
+
       router.push("/");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");

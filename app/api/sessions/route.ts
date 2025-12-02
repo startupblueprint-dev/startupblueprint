@@ -44,10 +44,21 @@ export async function POST(req: Request) {
 
     const supabase = await createClient();
 
-    // 1. Create the discovery session
+    // Get the current user (could be anonymous or permanent)
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    // 1. Create the discovery session with user_id
     const { data: session, error: sessionError } = await supabase
       .from("discovery_sessions")
       .insert({
+        user_id: user.id,
         intro_summary: intro,
         conversation_history: conversationHistory || [],
       })
@@ -165,10 +176,21 @@ export async function GET(req: Request) {
 
     const supabase = await createClient();
 
+    // Get the current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     if (tag) {
-      // Search by tag using the helper function
+      // Search by tag using the helper function with user scope
       const { data, error } = await supabase.rpc("search_sessions_by_tag", {
         search_tag: tag,
+        target_user_id: user.id,
       });
 
       if (error) {

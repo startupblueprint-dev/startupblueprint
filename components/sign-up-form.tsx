@@ -40,15 +40,32 @@ export function SignUpForm({
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/protected`,
-        },
-      });
-      if (error) throw error;
-      router.push("/auth/sign-up-success");
+      // Check if current user is anonymous
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const isAnonymous = currentUser?.is_anonymous ?? false;
+
+      if (isAnonymous) {
+        // Link email/password to anonymous user (converts them to permanent user)
+        const { error: updateError } = await supabase.auth.updateUser({
+          email,
+          password,
+        });
+        if (updateError) throw updateError;
+        
+        // Redirect to home - user is now permanent with all their data intact
+        router.push("/");
+      } else {
+        // Standard sign up for non-anonymous users
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`,
+          },
+        });
+        if (error) throw error;
+        router.push("/auth/sign-up-success");
+      }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {

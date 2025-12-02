@@ -14,19 +14,24 @@ type TopBarProps = {
 };
 
 export function TopBar({ fullWidth = false, className }: TopBarProps) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isPermanentUser, setIsPermanentUser] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
 
+    const checkUser = (user: { is_anonymous?: boolean } | null) => {
+      // Only show logout for permanent (non-anonymous) users
+      setIsPermanentUser(Boolean(user && !user.is_anonymous));
+    };
+
     supabase.auth.getUser().then(({ data }) => {
-      setIsLoggedIn(Boolean(data?.user));
+      checkUser(data?.user ?? null);
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_, session) => {
-      setIsLoggedIn(Boolean(session));
+      checkUser(session?.user ?? null);
     });
 
     return () => {
@@ -52,7 +57,7 @@ export function TopBar({ fullWidth = false, className }: TopBarProps) {
             Startup <span className="font-extrabold text-sky-600">Blueprint</span>
           </button>
         </div>
-        {isLoggedIn ? (
+        {isPermanentUser ? (
           <LogoutButton className="ml-auto" />
         ) : (
           <Button

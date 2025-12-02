@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { AnimatedHero } from "@/components/animated-hero";
-import { FooterBar } from "@/components/footer-bar";
 import { TopBar } from "@/components/top-bar";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 
@@ -33,7 +32,7 @@ export default function Home() {
       </div>
 
       <div
-        className={`relative z-10 flex flex-col gap-6 ${
+        className={`relative z-10 flex flex-col gap-4 ${
           showSolutions
             ? "w-full px-4 pb-6"
             : "mx-auto max-w-5xl px-4 pb-10 md:px-10"
@@ -50,7 +49,7 @@ export default function Home() {
           className={`relative overflow-hidden transition-all duration-700 ${
             showSolutions
               ? "w-full"
-              : "rounded-[32px] border border-white/70 bg-white px-6 pb-10 pt-8 shadow-[0_30px_120px_-60px_rgba(64,112,255,0.45)] md:p-10"
+              : "rounded-[32px] border border-white/70 bg-white px-6 py-6 shadow-[0_30px_120px_-60px_rgba(64,112,255,0.45)] md:px-10 md:py-8"
           } ${quoteCompleted ? "translate-y-0" : "-translate-y-10"}`}
         >
           <div className={`flex flex-wrap items-center justify-between ${showSolutions ? "w-full" : "gap-6"}`}>
@@ -60,7 +59,6 @@ export default function Home() {
             />
           </div>
         </div>
-        <FooterBar fullWidth={showSolutions} className="mt-4" />
       </div>
     </main>
   );

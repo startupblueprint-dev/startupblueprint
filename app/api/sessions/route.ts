@@ -7,6 +7,7 @@ interface SuggestionField {
   Solution?: string;
   "Ideal Customer Profile"?: string;
   "Business Model/Pricing"?: string;
+  "TAM/SAM/SOM"?: string;
   "Go-to-Market Plan"?: string;
   "Current Solutions"?: string;
   "10x Better Opportunity"?: string;
@@ -116,6 +117,7 @@ export async function POST(req: Request) {
           solution_description: fields.Solution || null,
           ideal_customer_profile: fields["Ideal Customer Profile"] || null,
           business_model_pricing: fields["Business Model/Pricing"] || null,
+          tam_sam_som: fields["TAM/SAM/SOM"] || null,
           go_to_market_plan: fields["Go-to-Market Plan"] || null,
           current_solutions: fields["Current Solutions"] || null,
           ten_x_opportunity: fields["10x Better Opportunity"] || null,

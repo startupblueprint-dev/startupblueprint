@@ -19,6 +19,7 @@ import {
   Sparkles,
   ChevronLeft,
   ChevronRight,
+  ChartPie,
   type LucideIcon,
 } from "lucide-react";
 import { createPortal } from "react-dom";
@@ -411,7 +412,8 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
     ["Pain", "Solution"],
     ["Ideal Customer Profile", "Go-to-Market Plan"],
     ["Current Solutions", "10x Better Opportunity"],
-    ["Business Model/Pricing", "Feature List"],
+    ["Business Model/Pricing", "TAM/SAM/SOM"],
+    ["Feature List", ""],
   ];
 
   const suggestionFieldLabels = suggestionFieldPairs.flat();
@@ -421,6 +423,7 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
     Solution: Lightbulb,
     "Ideal Customer Profile": Users,
     "Business Model/Pricing": DollarSign,
+    "TAM/SAM/SOM": ChartPie,
     "Go-to-Market Plan": Route,
     "Current Solutions": Layers,
     "10x Better Opportunity": Rocket,
@@ -454,6 +457,18 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
       return input.map((item) => formatFeatureItem(item.trim())).filter(Boolean);
     }
     return splitRawItems(input);
+  };
+
+  const formatTamSamSomValue = (input: string) => {
+    if (!input) return "";
+    const normalized = input.replace(/\r?\n/g, " ").replace(/\s+/g, " ").trim();
+    let isFirst = true;
+    const withLineBreaks = normalized.replace(/\b(TAM|SAM|SOM)\b/gi, (match) => {
+      const prefix = isFirst ? "" : "\n";
+      isFirst = false;
+      return `${prefix}${match}`;
+    });
+    return withLineBreaks.replace(/[,;]\s*\n/g, "\n").trim();
   };
 
   const parseFeatureList = (
@@ -723,18 +738,22 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
                                   Icon: LucideIcon | undefined
                                 ) => {
                                   if (!value) return null;
+                                  const displayValue =
+                                    label === "TAM/SAM/SOM" && typeof value === "string"
+                                      ? formatTamSamSomValue(value)
+                                      : value;
                                   return (
                                     <div>
                                       <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
                                         {Icon && <Icon className="h-4 w-4 text-sky-500" />}
                                         {label}
                                       </p>
-                                      <p className="mt-1 whitespace-pre-line text-slate-600">{value as string}</p>
+                                      <p className="mt-1 whitespace-pre-line text-slate-600">{displayValue as string}</p>
                                     </div>
                                   );
                                 };
 
-                                const renderFeatureListBlock = (value: any) => {
+                                const renderFeatureListBlock = (value: any, Icon: LucideIcon | undefined) => {
                                   if (!value) return null;
                                   const { core, base } = parseFeatureList(
                                     value as string | { Core?: string | string[]; Base?: string | string[] }
@@ -742,7 +761,7 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
                                   return (
                                     <div className="space-y-3">
                                       <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
-                                        {RightIcon && <RightIcon className="h-4 w-4 text-sky-500" />}
+                                        {Icon && <Icon className="h-4 w-4 text-sky-500" />}
                                         Feature List
                                       </p>
                                       <div className="grid gap-8 sm:grid-cols-2 sm:gap-12">
@@ -781,15 +800,21 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
                                   );
                                 };
 
+                                // Handle Feature List as full-width row
+                                if (leftLabel === "Feature List") {
+                                  return (
+                                    <div key={leftLabel} className="space-y-6">
+                                      {renderFeatureListBlock(leftValue, LeftIcon)}
+                                    </div>
+                                  );
+                                }
+
                                 return (
                                   <div key={`${leftLabel}-${rightLabel}`} className="space-y-6">
                                     <div className="grid gap-8 sm:grid-cols-2 sm:gap-12">
                                       {renderSimpleField(leftLabel, leftValue, LeftIcon)}
-                                      {rightLabel === "Feature List"
-                                        ? <div />
-                                        : renderSimpleField(rightLabel, rightValue, RightIcon)}
+                                      {rightLabel && renderSimpleField(rightLabel, rightValue, RightIcon)}
                                     </div>
-                                    {rightLabel === "Feature List" && renderFeatureListBlock(rightValue)}
                                   </div>
                                 );
                               })}

@@ -18,33 +18,19 @@ export default function Page() {
         <ThemeSwitcher />
       </div>
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 pb-10 pt-8 md:px-10">
-        <TopBar fullWidth />
-        <div className="mt-8 grid gap-10 rounded-[32px] border border-white/70 bg-white/95 p-6 text-slate-900 shadow-[0_30px_120px_-60px_rgba(64,112,255,0.45)] backdrop-blur md:grid-cols-[minmax(0,1fr)_380px] md:p-10">
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-sky-600">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 pb-10 pt-0 md:px-10">
+        <TopBar />
+        <div
+          className="mt-4 rounded-[32px] border border-white/70 bg-white py-6 text-slate-900 shadow-[0_30px_120px_-60px_rgba(64,112,255,0.45)] md:py-8"
+          style={{ paddingLeft: "120px", paddingRight: "120px" }}
+        >
+          <div className="flex w-full max-w-3xl flex-col gap-6 self-start" style={{ paddingLeft: "155px", paddingRight: "155px" }}>
+            <div className="space-y-3 text-left">
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-black">
                 Start here
               </p>
-              <h1 className="text-3xl font-bold text-slate-900 md:text-4xl">
-                Create an account and unlock guided momentum
-              </h1>
-              <p className="text-base text-slate-600">
-                Get instant access to collaborative canvases, AI research buddies,
-                and curated playbooks designed for your stage.
-              </p>
             </div>
-            <div className="grid gap-3 rounded-2xl border border-slate-100/80 bg-slate-50/70 p-5 text-sm text-slate-600 shadow-sm">
-              <p className="font-semibold text-slate-900">What’s included</p>
-              <ul className="list-disc space-y-1 pl-5">
-                <li>Personalized action items synced across devices</li>
-                <li>Anonymous sandboxing until you publish your plan</li>
-                <li>Seamless hand-off between teammates and mentors</li>
-              </ul>
-            </div>
-          </div>
-          <div className="mx-auto w-full max-w-sm">
-            <SignUpForm />
+            <SignUpForm className="w-full" />
           </div>
         </div>
       </div>

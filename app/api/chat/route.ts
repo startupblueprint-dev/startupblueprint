@@ -16,7 +16,7 @@ If the user does not know at least 10 people, then ask the user if they can easi
 `;
 
 const SUGGESTIONS_PROMPT = `
-With the answers, suggest 3 business solutions. For each one, outline pain, solution, ideal customer profile, business model/pricing, TAM/SAM/SOM (Total Addressable Market, Serviceable Addressable Market, Serviceable Obtainable Market), go to market plan, current solutions, 10x better opportunity, and feature list (core + base).
+With the answers, suggest 3 business solutions. For each one, outline pain, solution, ideal customer profile, TAM/SAM/SOM (Total Addressable Market, Serviceable Addressable Market, Serviceable Obtainable Market), business model/pricing, go to market plan, current solutions, 10x better opportunity, and feature list (core + base).
 
 You must return your response STRICTLY as JSON (no commentary before or after, no code fences). Use this structure:
 {
@@ -31,8 +31,8 @@ You must return your response STRICTLY as JSON (no commentary before or after, n
         "Pain": "description of the pain point",
         "Solution": "description of the solution",
         "Ideal Customer Profile": "who is the target customer",
-        "Business Model/Pricing": "how will it make money",
         "TAM/SAM/SOM": "Total Addressable Market, Serviceable Addressable Market, and Serviceable Obtainable Market estimates",
+        "Business Model/Pricing": "how will it make money",
         "Go-to-Market Plan": "how to reach customers",
         "Current Solutions": "what exists today",
         "10x Better Opportunity": "why this is significantly better",

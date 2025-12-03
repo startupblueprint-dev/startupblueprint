@@ -20,6 +20,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ChartPie,
+  CircleHelp,
   type LucideIcon,
 } from "lucide-react";
 import { createPortal } from "react-dom";
@@ -57,15 +58,60 @@ const LOADING_FRAMES: Record<LoadingPhase, string[]> = {
     "Generating Solutions...",            
   ],
   documents: [
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
     "Generating Landing Page.",
     "Generating Landing Page..",
     "Generating Landing Page...",
+    "Generating Landing Page.",
+    "Generating Landing Page..",
+    "Generating Landing Page...",
+    "Generating Landing Page.",
+    "Generating Landing Page..",
+    "Generating Landing Page...",
+    "Generating Landing Page.",
+    "Generating Landing Page..",
+    "Generating Landing Page...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",    
     "Developing PRD.",
     "Developing PRD..",
     "Developing PRD...",
+    "Developing PRD.",
+    "Developing PRD..",
+    "Developing PRD...",
+    "Developing PRD.",
+    "Developing PRD..",
+    "Developing PRD...",
+    "Developing PRD.",
+    "Developing PRD..",
+    "Developing PRD...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
     "Almost Done.",
     "Almost Done..",
     "Almost Done...",
+    "Almost Done.",
+    "Almost Done..",
+    "Almost Done...",
+    "Almost Done.",
+    "Almost Done..",
+    "Almost Done...",
+    "Almost Done.",
+    "Almost Done..",
+    "Almost Done...",  
   ],
 };
 
@@ -104,6 +150,7 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [currentSolutionIndex, setCurrentSolutionIndex] = useState(0);
   const [isSavingSession, setIsSavingSession] = useState(false);
+  const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -142,6 +189,19 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
     el.style.height = "auto";
     el.style.height = `${el.scrollHeight}px`;
   }, [input]);
+
+  useEffect(() => {
+    const handleDocumentClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("[data-tooltip-trigger]")) {
+        return;
+      }
+      setActiveTooltip(null);
+    };
+
+    document.addEventListener("click", handleDocumentClick);
+    return () => document.removeEventListener("click", handleDocumentClick);
+  }, []);
 
   const scrollToBottom = () => {
     if (scrollRef.current) {
@@ -412,7 +472,7 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
     ["Pain", "Solution"],
     ["Ideal Customer Profile", "Go-to-Market Plan"],
     ["Current Solutions", "10x Better Opportunity"],
-    ["Business Model/Pricing", "TAM/SAM/SOM"],
+    ["TAM/SAM/SOM", "Business Model/Pricing"],
     ["Feature List", ""],
   ];
 
@@ -430,7 +490,62 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
     "Feature List": ListChecks,
   };
 
+  const FIELD_TOOLTIPS: Record<string, string> = {
+    Pain: "Clarifies the urgent workflow breakdown or frustration your target customer lives with today.",
+    Solution: "Explains the product concept that relieves the pain in a defensible, scalable way.",
+    "Ideal Customer Profile": "Defines the buyer persona or team that feels the pain most intensely and buys fastest.",
+    "Go-to-Market Plan": "Outlines the channels, programs, and motions to reach and convert the Ideal Customer Profile (ICP).",
+    "Current Solutions": "Summarizes incumbent tools or hacks customers rely on right now.",
+    "10x Better Opportunity": "Quantifies why this approach is dramatically better than existing options.",
+    "TAM/SAM/SOM": `Total Addressable Market (TAM)
+The maximum potential demand of a specific market.
+
+Serviceable Addressable Market (SAM)
+The size of the TAM you can reasonably target with your solution.
+
+Serviceable Obtainable Market (SOM)
+The size of the SAM you can potentially convert to buy your solution.`,
+    "Business Model/Pricing": "Describes how revenue is captured—pricing model, tiers, or monetization levers.",
+    "Feature List": "Separates Core must-have MVP launch features, and Base nice-to-have roadmap features.",
+  };
+
   const ACRONYMS = ["AI", "API", "ML", "UI", "UX", "SaaS", "CRM", "ERP", "B2B", "B2C", "IoT", "SDK", "KPI"];
+
+  const renderFieldHeading = (label: string, Icon: LucideIcon | undefined) => {
+    const tooltip = FIELD_TOOLTIPS[label];
+    const isActive = activeTooltip === label;
+
+    return (
+      <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
+        {Icon && <Icon className="h-4 w-4 text-sky-500" />}
+        {tooltip ? (
+          <span className="group/tooltip relative inline-flex items-center gap-1">
+            <span>{label}</span>
+            <button
+              type="button"
+              aria-label={`Show info for ${label}`}
+              aria-pressed={isActive}
+              data-tooltip-trigger
+              onClick={(event) => {
+                event.stopPropagation();
+                setActiveTooltip((current) => (current === label ? null : label));
+              }}
+              className="inline-flex h-5 w-5 items-center justify-center rounded-full text-slate-400 transition-colors hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+            >
+              <CircleHelp className="h-4 w-4" />
+            </button>
+            <span
+              className={`pointer-events-none absolute left-1/2 top-full z-20 mt-2 w-64 -translate-x-1/2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-normal text-slate-600 text-left whitespace-pre-line opacity-0 shadow-lg transition-opacity duration-200 ${isActive ? "opacity-100" : "group-hover/tooltip:opacity-100"}`}
+            >
+              {tooltip}
+            </span>
+          </span>
+        ) : (
+          label
+        )}
+      </p>
+    );
+  };
 
   const formatFeatureItem = (text: string) =>
     text
@@ -744,10 +859,7 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
                                       : value;
                                   return (
                                     <div>
-                                      <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
-                                        {Icon && <Icon className="h-4 w-4 text-sky-500" />}
-                                        {label}
-                                      </p>
+                                      {renderFieldHeading(label, Icon)}
                                       <p className="mt-1 whitespace-pre-line text-slate-600">{displayValue as string}</p>
                                     </div>
                                   );
@@ -760,10 +872,7 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
                                   );
                                   return (
                                     <div className="space-y-3">
-                                      <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
-                                        {Icon && <Icon className="h-4 w-4 text-sky-500" />}
-                                        Feature List
-                                      </p>
+                                      {renderFieldHeading("Feature List", Icon)}
                                       <div className="grid gap-8 sm:grid-cols-2 sm:gap-12">
                                         <div>
                                           <p className="text-xs font-semibold uppercase text-slate-400">Core</p>

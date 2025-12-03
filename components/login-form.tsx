@@ -3,13 +3,6 @@
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
@@ -69,62 +62,63 @@ export function LoginForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>
-            Enter your email below to login to your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin}>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  <Link
-                    href="/auth/forgot-password"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
-                    Forgot your password?
-                  </Link>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Logging in..." : "Login"}
-              </Button>
-            </div>
-            <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{" "}
+      <div className="space-y-4">
+        <h1 className="text-3xl font-semibold text-sky-600">Login</h1>
+        <form onSubmit={handleLogin} className="space-y-6">
+          <div className="grid gap-2">
+            <Label htmlFor="email" className="text-sm font-medium text-slate-700">
+              Email
+            </Label>
+            <Input
+              className="bg-white text-slate-900 placeholder:text-slate-400"
+              id="email"
+              type="email"
+              placeholder="m@example.com"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div className="grid gap-2">
+            <div className="flex items-center">
+              <Label htmlFor="password" className="text-sm font-medium text-slate-700">
+                Password
+              </Label>
               <Link
-                href="/auth/sign-up"
-                className="underline underline-offset-4"
+                href="/auth/forgot-password"
+                className="ml-auto text-sm font-medium text-slate-500 underline-offset-4 hover:text-slate-700"
               >
-                Sign up
+                Forgot your password?
               </Link>
             </div>
-          </form>
-        </CardContent>
-      </Card>
+            <Input
+              className="bg-white text-slate-900 placeholder:text-slate-400"
+              id="password"
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          {error && <p className="text-sm text-red-500">{error}</p>}
+          <Button
+            type="submit"
+            className="w-full bg-sky-600 text-white transition-colors hover:bg-sky-700 disabled:bg-slate-300"
+            disabled={isLoading}
+          >
+            {isLoading ? "Logging in..." : "Login"}
+          </Button>
+          <div className="text-center text-sm text-slate-900">
+            Don&apos;t have an account?{" "}
+            <Link
+              href="/sign-up"
+              className="font-semibold text-sky-600 underline underline-offset-4 hover:text-sky-700"
+            >
+              Sign up
+            </Link>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

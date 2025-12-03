@@ -21,6 +21,7 @@ export type Database = {
           id: string
           intro_summary: string
           updated_at: string
+          user_id: string
         }
         Insert: {
           conversation_history?: Json
@@ -28,6 +29,7 @@ export type Database = {
           id?: string
           intro_summary: string
           updated_at?: string
+          user_id: string
         }
         Update: {
           conversation_history?: Json
@@ -35,6 +37,7 @@ export type Database = {
           id?: string
           intro_summary?: string
           updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -147,6 +150,7 @@ export type Database = {
           session_id: string
           solution_description: string | null
           summary: string | null
+          tam_sam_som: string | null
           ten_x_opportunity: string | null
           title: string
           updated_at: string
@@ -167,6 +171,7 @@ export type Database = {
           session_id: string
           solution_description?: string | null
           summary?: string | null
+          tam_sam_som?: string | null
           ten_x_opportunity?: string | null
           title: string
           updated_at?: string
@@ -187,6 +192,7 @@ export type Database = {
           session_id?: string
           solution_description?: string | null
           summary?: string | null
+          tam_sam_som?: string | null
           ten_x_opportunity?: string | null
           title?: string
           updated_at?: string
@@ -230,27 +236,55 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      search_sessions_by_tag: {
-        Args: { search_tag: string }
-        Returns: {
-          created_at: string
-          intro_summary: string
-          matching_tags: string[]
-          session_id: string
-        }[]
+      is_anonymous: { Args: never; Returns: boolean }
+      reassign_anonymous_sessions: {
+        Args: { new_user_id: string; old_user_id: string }
+        Returns: undefined
       }
-      search_solutions_by_tag: {
-        Args: { search_tag: string }
-        Returns: {
-          created_at: string
-          is_selected: boolean
-          matching_tags: string[]
-          session_id: string
-          solution_id: string
-          summary: string
-          title: string
-        }[]
-      }
+      search_sessions_by_tag:
+        | {
+            Args: { search_tag: string }
+            Returns: {
+              created_at: string
+              intro_summary: string
+              matching_tags: string[]
+              session_id: string
+            }[]
+          }
+        | {
+            Args: { search_tag: string; target_user_id: string }
+            Returns: {
+              created_at: string
+              intro_summary: string
+              matching_tags: string[]
+              session_id: string
+            }[]
+          }
+      search_solutions_by_tag:
+        | {
+            Args: { search_tag: string }
+            Returns: {
+              created_at: string
+              is_selected: boolean
+              matching_tags: string[]
+              session_id: string
+              solution_id: string
+              summary: string
+              title: string
+            }[]
+          }
+        | {
+            Args: { search_tag: string; target_user_id: string }
+            Returns: {
+              created_at: string
+              is_selected: boolean
+              matching_tags: string[]
+              session_id: string
+              solution_id: string
+              summary: string
+              title: string
+            }[]
+          }
       upsert_tag: {
         Args: { tag_name: string; tag_type_param: string }
         Returns: string

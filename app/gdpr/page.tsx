@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { TopBar } from "@/components/top-bar";
 
@@ -33,6 +32,8 @@ const sections = [
   },
 ];
 
+const LAST_UPDATED = "December 3, 2025";
+
 export default function GDPRPage() {
   return (
     <main className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-[#051937] via-[#0a2a5f] to-[#0b3f83] text-foreground">
@@ -54,7 +55,7 @@ export default function GDPRPage() {
         <article className="rounded-[32px] border border-white/60 bg-white/95 px-6 py-8 text-slate-900 shadow-[0_30px_120px_-60px_rgba(64,112,255,0.55)] backdrop-blur-md md:px-12 md:py-12">
           <p className="text-xs font-semibold uppercase tracking-[0.35em] text-sky-600">GDPR</p>
           <h1 className="mt-3 text-3xl font-semibold text-slate-900 md:text-2xl">General Data Protection Regulation (GDPR) Notice</h1>
-          <p className="mt-3 text-sm text-slate-600 md:text-base">Last updated: {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</p>
+          <p className="mt-3 text-sm text-slate-600 md:text-base">Last updated: {LAST_UPDATED}</p>
           <p className="mt-5 text-base leading-relaxed text-slate-700">
             Startup Blueprint is committed to transparent, privacy-first product development. This notice outlines how we comply with the European Union&apos;s GDPR when processing your data as you explore customer discovery ideas through our platform.
           </p>

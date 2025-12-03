@@ -38,6 +38,8 @@ const policySections = [
   },
 ];
 
+const EFFECTIVE_DATE = "3 Dec 2025";
+
 export default function PrivacyPolicyPage() {
   return (
     <main className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-[#051937] via-[#0a2a5f] to-[#0b3f83] text-foreground">
@@ -59,7 +61,7 @@ export default function PrivacyPolicyPage() {
         <article className="rounded-[32px] border border-white/60 bg-white/95 px-6 py-8 text-slate-900 shadow-[0_30px_120px_-60px_rgba(64,112,255,0.55)] backdrop-blur-md md:px-12 md:py-12">
           <p className="text-xs font-semibold uppercase tracking-[0.35em] text-sky-600">PRIVACY POLICY</p>
           <h1 className="mt-3 text-3xl font-semibold text-slate-900 md:text-4xl">Startup Blueprint</h1>
-          <p className="mt-3 text-sm text-slate-600 md:text-base">Effective date: {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</p>
+          <p className="mt-3 text-sm text-slate-600 md:text-base">Effective date: {EFFECTIVE_DATE}</p>
           <p className="mt-5 text-base leading-relaxed text-slate-700">
             This policy explains what information we collect, why we collect it, and how you can exercise control. By using Startup Blueprint you agree to the practices described below.
           </p>

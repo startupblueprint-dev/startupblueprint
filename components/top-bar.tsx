@@ -56,6 +56,14 @@ export function TopBar({ fullWidth = false, className }: TopBarProps) {
             Startup <span className="font-extrabold text-sky-600">Blueprint</span>
           </Link>
         </div>
+        <nav className="ml-4 flex items-center gap-1">
+          <Link
+            href="/wall"
+            className="rounded-md px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 sm:text-sm"
+          >
+            Wall
+          </Link>
+        </nav>
         {isPermanentUser ? (
           <LogoutButton className="ml-auto" />
         ) : (

@@ -28,6 +28,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 type LoadingPhase = "questions" | "suggestions" | "documents";
+export type DocumentsStatus = "idle" | "generating" | "ready";
 
 const LOADING_FRAMES: Record<LoadingPhase, string[]> = {
   questions: ["Thinking.", "Thinking..", "Thinking..."],
@@ -64,6 +65,18 @@ const LOADING_FRAMES: Record<LoadingPhase, string[]> = {
     "Thinking.",
     "Thinking..",
     "Thinking...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
     "Generating Landing Page.",
     "Generating Landing Page..",
     "Generating Landing Page...",
@@ -76,6 +89,18 @@ const LOADING_FRAMES: Record<LoadingPhase, string[]> = {
     "Generating Landing Page.",
     "Generating Landing Page..",
     "Generating Landing Page...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
     "Thinking.",
     "Thinking..",
     "Thinking...",
@@ -100,6 +125,18 @@ const LOADING_FRAMES: Record<LoadingPhase, string[]> = {
     "Thinking.",
     "Thinking..",
     "Thinking...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
     "Almost Done.",
     "Almost Done..",
     "Almost Done...",
@@ -111,7 +148,19 @@ const LOADING_FRAMES: Record<LoadingPhase, string[]> = {
     "Almost Done...",
     "Almost Done.",
     "Almost Done..",
-    "Almost Done...",  
+    "Almost Done...",
+    "Finalizing.",
+    "Finalizing..",
+    "Finalizing...",
+    "Finalizing.",
+    "Finalizing..",
+    "Finalizing...",
+    "Finalizing.",
+    "Finalizing..",
+    "Finalizing...",
+    "Finalizing.",
+    "Finalizing..",
+    "Finalizing...",
   ],
 };
 
@@ -131,9 +180,11 @@ type ParsedSuggestion = {
 
 type ChatInterfaceProps = {
   onSuggestionsVisible?: (visible: boolean) => void;
+  onDocumentsStatusChange?: (status: DocumentsStatus) => void;
+  documentsStatus?: DocumentsStatus;
 };
 
-export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
+export function ChatInterface({ onSuggestionsVisible, onDocumentsStatusChange, documentsStatus }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "model",
@@ -156,11 +207,14 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const solutionCardRef = useRef<HTMLDivElement>(null);
 
+  const externalGenerating = documentsStatus === "generating";
+  const showLoadingState = isLoading || externalGenerating;
+
   useEffect(() => {
-    if (!isLoading && inputRef.current) {
+    if (!showLoadingState && inputRef.current) {
       inputRef.current.focus();
     }
-  }, [isLoading]);
+  }, [showLoadingState]);
 
   useEffect(() => {
     if (typeof window !== "undefined" && input) {
@@ -171,7 +225,7 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
   const loadingFrames = LOADING_FRAMES[loadingPhase];
 
   useEffect(() => {
-    if (!isLoading) {
+    if (!showLoadingState) {
       setThinkingFrameIndex(0);
       return;
     }
@@ -181,7 +235,7 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
     }, 600);
 
     return () => window.clearInterval(interval);
-  }, [isLoading, loadingFrames.length, loadingFrames]);
+  }, [showLoadingState, loadingFrames.length, loadingFrames]);
 
   useEffect(() => {
     if (!textareaRef.current) return;
@@ -245,6 +299,22 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
     URL.revokeObjectURL(url);
   };
 
+  useEffect(() => {
+    onDocumentsStatusChange?.("idle");
+  }, [onDocumentsStatusChange]);
+
+  const markDocumentsGenerating = () => {
+    onDocumentsStatusChange?.("generating");
+  };
+
+  const markDocumentsCompletion = (prdContent?: string, landingPageContent?: string) => {
+    if (prdContent && landingPageContent) {
+      onDocumentsStatusChange?.("ready");
+    } else {
+      onDocumentsStatusChange?.("idle");
+    }
+  };
+
   const handleBuildClick = (solutionNumber: number) => {
     setSelectedSolution(solutionNumber);
     setConfirmDialogOpen(true);
@@ -259,6 +329,7 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
       setMessages((prev) => [...prev, userMessage]);
       setIsLoading(true);
       setLoadingPhase("documents");
+      markDocumentsGenerating();
 
       try {
         const response = await fetch("/api/chat", {
@@ -301,6 +372,7 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
           lastMsg.landingPageContent = landingPageContent;
           return newMessages;
         });
+        markDocumentsCompletion(prdContent, landingPageContent);
 
         // Save selected solution and documents to database
         if (sessionId && (prdContent || landingPageContent)) {
@@ -320,6 +392,7 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
         }
       } catch (error) {
         console.error("Error:", error);
+        onDocumentsStatusChange?.("idle");
       } finally {
         setIsLoading(false);
       }
@@ -345,6 +418,7 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
 
     if (hasSuggestions && isSelectingSolution) {
       setLoadingPhase("documents");
+      markDocumentsGenerating();
     } else if (!hasSuggestions && questionNumber > 8) {
       setLoadingPhase("suggestions");
     } else {
@@ -392,8 +466,14 @@ export function ChatInterface({ onSuggestionsVisible }: ChatInterfaceProps) {
         lastMsg.landingPageContent = landingPageContent;
         return newMessages;
       });
+      if (hasSuggestions && isSelectingSolution) {
+        markDocumentsCompletion(prdContent, landingPageContent);
+      }
     } catch (error) {
       console.error("Error:", error);
+      if (hasSuggestions && isSelectingSolution) {
+        onDocumentsStatusChange?.("idle");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -744,7 +824,7 @@ The size of the SAM you can potentially convert to buy your solution.`,
   return (
     <div className={`flex w-full flex-col ${hasSuggestions ? "min-h-screen items-center justify-center px-4 sm:px-10 py-6" : "h-full sm:max-w-4xl"}`}>
       <div className={`relative w-full transition-all duration-500 ease-in-out ${hasSuggestions ? "max-w-5xl" : "flex-1"} ${suggestionViewClasses}`}>
-        {isLoading ? (
+        {showLoadingState ? (
           <div className="relative isolate flex h-full flex-col animate-in fade-in duration-500">
             <div className="flex flex-1 flex-col justify-center px-4 pb-6 pt-4 text-center sm:p-10">
               <h2 className="text-sm font-semibold leading-tight text-sky-700 md:text-lg">
@@ -992,14 +1072,14 @@ The size of the SAM you can potentially convert to buy your solution.`,
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        disabled={isLoading}
+                        disabled={showLoadingState}
                         className="h-auto flex-1 border-none bg-transparent px-0 text-base text-slate-900 placeholder:text-slate-400 shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                       />
                     </div>
                   </div>
                   <Button
                     onClick={handleSend}
-                    disabled={isLoading || !input.trim()}
+                    disabled={showLoadingState || !input.trim()}
                     data-send-button
                     className="-ml-[3px] rounded-none rounded-r-[24px] bg-sky-500 px-5 text-white sm:-ml-[3px] sm:rounded-r-[500px] z-10 disabled:bg-slate-400 disabled:text-white disabled:opacity-100"
                   >

@@ -53,8 +53,8 @@ IMPORTANT:
 - Do not wrap the JSON in \`\`\`.
 - Do not include any additional prose outside the JSON object.
 - Do NOT generate PRD or Landing Page content yet - wait for user to select a solution first.
-- "problemTags" should be 3 short, relevant category tags (e.g., "Healthcare", "B2B SaaS", "Automation") that describe the problem space based on user answers.
-- Each suggestion's "tags" should be 3 short, relevant category tags (e.g., "AI-Powered", "Enterprise", "Analytics") that describe that specific solution.
+- "problemTags" should be 3 short, relevant category tags (e.g., "Healthcare", "B2B SaaS", "Automation") that describe the problem space based on user answers, and the first tag must explicitly reflect the user's domain of expertise (e.g., Travel, Music).
+- Each suggestion's "tags" should be 3 short, relevant category tags (e.g., "AI-Powered", "Enterprise", "Analytics") that describe that specific solution, with the first tag always set to the user's domain of expertise.
 `;
 
 const GENERATE_DOCS_PROMPT = `

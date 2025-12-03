@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Caveat } from "next/font/google";
-import { ChatInterface } from "@/components/chat-interface";
+import { ChatInterface, type DocumentsStatus } from "@/components/chat-interface";
 import { Heart } from "lucide-react";
 
 const HEADLINE_LINE1 = "Actually Build Something";
@@ -24,9 +24,16 @@ const caveat = Caveat({
 type AnimatedHeroProps = {
   onSuggestionsVisible?: (visible: boolean) => void;
   onQuoteComplete?: () => void;
+  onDocumentsStatusChange?: (status: DocumentsStatus) => void;
+  documentsStatus?: DocumentsStatus;
 };
 
-export function AnimatedHero({ onSuggestionsVisible, onQuoteComplete }: AnimatedHeroProps) {
+export function AnimatedHero({
+  onSuggestionsVisible,
+  onQuoteComplete,
+  onDocumentsStatusChange,
+  documentsStatus,
+}: AnimatedHeroProps) {
   const [line1Text, setLine1Text] = useState("");
   const [line2Text, setLine2Text] = useState("");
   const [line3Text, setLine3Text] = useState("");
@@ -125,7 +132,10 @@ export function AnimatedHero({ onSuggestionsVisible, onQuoteComplete }: Animated
     line2Text.length === HEADLINE_LINE2.length &&
     line3Text.length < HEADLINE_LINE3.length;
 
-  const rootClasses = showSolutions
+  const heroLocked = documentsStatus === "generating";
+  const heroCollapsed = showSolutions || heroLocked;
+
+  const rootClasses = heroCollapsed
     ? "relative flex w-full flex-col min-h-screen"
     : "relative flex w-full flex-col h-[520px] md:h-[640px]";
 
@@ -225,13 +235,13 @@ export function AnimatedHero({ onSuggestionsVisible, onQuoteComplete }: Animated
         </div>
       ) : (
         <>
-          <div className={`absolute right-0 top-0 hidden md:right-7 md:block transition-all duration-500 ${showSolutions ? "!hidden" : ""}`}>
+          <div className={`absolute right-0 top-0 hidden md:right-7 md:block transition-all duration-500 ${heroCollapsed ? "!hidden" : ""}`}>
             <span className="inline-flex items-center gap-2 rounded-full border border-muted-foreground/20 bg-white px-4 py-2 text-sm text-muted-foreground shadow-[0_15px_40px_-30px_rgba(15,23,42,0.55)]">
               <span className="h-2 w-2 rounded-full bg-sky-400" /> Built for Founders
             </span>
           </div>
           <div className="flex h-full flex-col">
-            <div className={`space-y-1 pl-5 pr-5 text-center md:space-y-6 md:pl-10 md:pr-10 md:text-left transition-all duration-500 ${showSolutions ? "hidden" : ""}`}>
+            <div className={`space-y-1 pl-5 pr-5 text-center md:space-y-6 md:pl-10 md:pr-10 md:text-left transition-all duration-500 ${heroCollapsed ? "hidden" : ""}`}>
               <div className="space-y-4">
                 <h1 className="text-[clamp(1rem,6vw,1.37rem)] font-semibold leading-tight tracking-tight text-gray-900 sm:text-[2.5rem] sm:leading-tight">
                   <span className="block whitespace-nowrap sm:whitespace-normal">
@@ -319,17 +329,17 @@ export function AnimatedHero({ onSuggestionsVisible, onQuoteComplete }: Animated
               <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground" />
             </div>
             <div
-              className={`flex-1 ${showSolutions ? "pt-0" : "pt-8 md:pt-6"} transition-all duration-500 ${
+              className={`flex-1 ${heroCollapsed ? "pt-0" : "pt-8 md:pt-6"} transition-all duration-500 ${
                 showChat
                   ? "translate-y-0 opacity-100"
                   : "translate-y-8 opacity-0"
               }`}
             >
               <div className="flex h-full w-full">
-                <ChatInterface onSuggestionsVisible={(visible) => {
+                <ChatInterface documentsStatus={documentsStatus} onSuggestionsVisible={(visible) => {
                   setShowSolutions(visible);
                   onSuggestionsVisible?.(visible);
-                }} />
+                }} onDocumentsStatusChange={onDocumentsStatusChange} />
               </div>
             </div>
           </div>

@@ -1,20 +1,40 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatedHero } from "@/components/animated-hero";
 import { TopBar } from "@/components/top-bar";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import type { DocumentsStatus } from "@/components/chat-interface";
 
 export default function Home() {
   const [showSolutions, setShowSolutions] = useState(false);
   const [quoteCompleted, setQuoteCompleted] = useState(false);
+  const [documentsStatus, setDocumentsStatus] = useState<DocumentsStatus>("idle");
+  const desiredSolutionsVisibility = useRef(false);
+
+  const handleSuggestionsVisible = (visible: boolean) => {
+    desiredSolutionsVisibility.current = visible;
+    if (documentsStatus === "generating") {
+      return;
+    }
+    setShowSolutions(visible);
+  };
+
+  useEffect(() => {
+    if (documentsStatus === "generating") {
+      setShowSolutions(true);
+    } else {
+      setShowSolutions(desiredSolutionsVisibility.current);
+    }
+  }, [documentsStatus]);
 
   const topBarClasses = useMemo(() => {
-    const visibility = quoteCompleted
+    const visibility = quoteCompleted && documentsStatus !== "generating"
       ? "opacity-100 translate-y-0"
       : "pointer-events-none opacity-0 -translate-y-6";
     return `transition-all duration-700 ${visibility}`;
-  }, [quoteCompleted]);
+  }, [quoteCompleted, documentsStatus]);
 
   return (
     <main className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-[#051937] via-[#0a2a5f] to-[#0b3f83] text-foreground">
@@ -54,9 +74,30 @@ export default function Home() {
         >
           <div className={`flex flex-wrap items-center justify-between ${showSolutions ? "w-full" : "gap-6"}`}>
             <AnimatedHero
-              onSuggestionsVisible={setShowSolutions}
+              onSuggestionsVisible={handleSuggestionsVisible}
               onQuoteComplete={() => setQuoteCompleted(true)}
+              onDocumentsStatusChange={setDocumentsStatus}
+              documentsStatus={documentsStatus}
             />
+          </div>
+          <div className="mt-6 border-t border-white/60 pt-4 text-center text-xs text-slate-500 sm:text-sm">
+            <nav className="flex flex-wrap items-center justify-center gap-4">
+              <Link
+                href="/privacy-policy"
+                className="font-medium text-slate-600 transition-colors hover:text-slate-900"
+              >
+                Privacy Policy
+              </Link>
+              <span aria-hidden="true" className="text-slate-400">
+                •
+              </span>
+              <Link
+                href="/gdpr"
+                className="font-medium text-slate-600 transition-colors hover:text-slate-900"
+              >
+                GDPR
+              </Link>
+            </nav>
           </div>
         </div>
       </div>

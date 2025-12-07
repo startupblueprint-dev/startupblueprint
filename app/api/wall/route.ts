@@ -1,8 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { connection } from "next/server";
 
 // GET endpoint to retrieve all discovery sessions for the wall (public view)
 export async function GET(req: Request) {
+  // Opt into dynamic rendering so cookies() works at request time
+  await connection();
+
   try {
     const supabase = await createClient();
 

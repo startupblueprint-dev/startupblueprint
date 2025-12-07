@@ -2,7 +2,7 @@
 
 **Startup Blueprint** is a guided AI workspace that helps founders validate real market pain, converge on actionable SaaS opportunities, and immediately spin up shipping assets like PRDs and landing-page copy. The conversational flow asks eight high-signal discovery questions, synthesizes three venture concepts, and streams download-ready Markdown deliverables.
 
-> “Actually build something that solves real problems.”
+> “Build something that solves real problems.”
 
 ## Table of contents
 

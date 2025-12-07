@@ -12,6 +12,8 @@ interface SuggestionField {
   "Current Solutions"?: string;
   "10x Better Opportunity"?: string;
   "Feature List"?: {
+    MVP?: string[];
+    Roadmap?: string[];
     Core?: string[];
     Base?: string[];
   };
@@ -121,8 +123,8 @@ export async function POST(req: Request) {
           go_to_market_plan: fields["Go-to-Market Plan"] || null,
           current_solutions: fields["Current Solutions"] || null,
           ten_x_opportunity: fields["10x Better Opportunity"] || null,
-          features_core: featureList?.Core || [],
-          features_base: featureList?.Base || [],
+          features_mvp: featureList?.MVP ?? featureList?.Core ?? [],
+          features_roadmap: featureList?.Roadmap ?? featureList?.Base ?? [],
         })
         .select("id")
         .single();

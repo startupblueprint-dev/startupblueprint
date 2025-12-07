@@ -47,8 +47,8 @@ interface Solution {
   go_to_market_plan: string | null;
   current_solutions: string | null;
   ten_x_opportunity: string | null;
-  features_core: string[] | null;
-  features_base: string[] | null;
+  features_mvp: string[] | null;
+  features_roadmap: string[] | null;
 }
 
 interface Session {
@@ -76,7 +76,7 @@ const SOLUTION_SECTION_TOOLTIPS: Record<string, string> = {
   "10x Better Opportunity":
     "Quantifies why this approach is dramatically better than existing options.",
   Features:
-    "Separates Core must-have MVP launch features from Base nice-to-have roadmap features.",
+    "Separates MVP launch-critical functionality from Roadmap experiments that extend the vision.",
 };
 
 function SessionDetailModal({
@@ -142,7 +142,7 @@ function SessionDetailModal({
           {
             title: "Features",
             content:
-              solution.features_core?.length || solution.features_base?.length
+              solution.features_mvp?.length || solution.features_roadmap?.length
                 ? undefined
                 : null,
             icon: <ListChecks className="h-5 w-5 text-slate-400" />,
@@ -151,7 +151,7 @@ function SessionDetailModal({
         ] as const
       ).filter((section) => {
         if (section.title === "Features") {
-          return Boolean(solution.features_core?.length || solution.features_base?.length);
+          return Boolean(solution.features_mvp?.length || solution.features_roadmap?.length);
         }
         return Boolean(section.content);
       })
@@ -212,11 +212,11 @@ function SessionDetailModal({
                       <InfoTooltip text={section.tooltip} />
                     </div>
                   </div>
-                  {solution.features_core && solution.features_core.length > 0 && (
+                  {solution.features_mvp && solution.features_mvp.length > 0 && (
                     <div className="mb-3">
-                      <p className="mb-2 text-sm font-medium text-slate-700">Core Features</p>
+                      <p className="mb-2 text-sm font-medium text-slate-700">MVP Features</p>
                       <ul className="space-y-1">
-                        {solution.features_core.map((feature, idx) => (
+                        {solution.features_mvp.map((feature, idx) => (
                           <li key={idx} className="flex items-start gap-2 text-sm text-slate-600">
                             <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-sky-500" />
                             {feature}
@@ -225,11 +225,11 @@ function SessionDetailModal({
                       </ul>
                     </div>
                   )}
-                  {solution.features_base && solution.features_base.length > 0 && (
+                  {solution.features_roadmap && solution.features_roadmap.length > 0 && (
                     <div>
-                      <p className="mb-2 text-sm font-medium text-slate-700">Base Features</p>
+                      <p className="mb-2 text-sm font-medium text-slate-700">Roadmap Features</p>
                       <ul className="space-y-1">
-                        {solution.features_base.map((feature, idx) => (
+                        {solution.features_roadmap.map((feature, idx) => (
                           <li key={idx} className="flex items-start gap-2 text-sm text-slate-600">
                             <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-green-400" />
                             {feature}

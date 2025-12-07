@@ -138,8 +138,8 @@ export type Database = {
           business_model_pricing: string | null
           created_at: string
           current_solutions: string | null
-          features_base: Json | null
-          features_core: Json | null
+          features_roadmap: Json | null
+          features_mvp: Json | null
           go_to_market_plan: string | null
           id: string
           ideal_customer_profile: string | null
@@ -159,8 +159,8 @@ export type Database = {
           business_model_pricing?: string | null
           created_at?: string
           current_solutions?: string | null
-          features_base?: Json | null
-          features_core?: Json | null
+          features_roadmap?: Json | null
+          features_mvp?: Json | null
           go_to_market_plan?: string | null
           id?: string
           ideal_customer_profile?: string | null
@@ -180,8 +180,8 @@ export type Database = {
           business_model_pricing?: string | null
           created_at?: string
           current_solutions?: string | null
-          features_base?: Json | null
-          features_core?: Json | null
+          features_roadmap?: Json | null
+          features_mvp?: Json | null
           go_to_market_plan?: string | null
           id?: string
           ideal_customer_profile?: string | null

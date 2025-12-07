@@ -12,11 +12,12 @@ Ask the questions 1 by 1.
 
 Do not make any response to user.
 
-If the user does not know at least 10 people, then ask the user if they can easily reach 10 people. If not, then start the process again from beginning.
+Ask this explicitly: "Do you have 8 people in your immediate network who would immediately benefit from this solution and reply if you sent them a low-risk business pitch?"
+If the user answers no, ask if they can easily reach 8 such people. If not, start the process again from the beginning.
 `;
 
 const SUGGESTIONS_PROMPT = `
-With the answers, suggest 3 business solutions. For each one, outline pain, solution, ideal customer profile, TAM/SAM/SOM (Total Addressable Market, Serviceable Addressable Market, Serviceable Obtainable Market), business model/pricing, go to market plan, current solutions, 10x better opportunity, and feature list (core + base).
+With the answers, suggest 3 business solutions. For each one, outline pain, solution, ideal customer profile, TAM/SAM/SOM (Total Addressable Market, Serviceable Addressable Market, Serviceable Obtainable Market), business model/pricing, go to market plan, current solutions, 10x better opportunity, and feature list (MVP + Roadmap).
 
 You must return your response STRICTLY as JSON (no commentary before or after, no code fences). Use this structure:
 {
@@ -37,8 +38,8 @@ You must return your response STRICTLY as JSON (no commentary before or after, n
         "Current Solutions": "what exists today",
         "10x Better Opportunity": "why this is significantly better",
         "Feature List": {
-          "Core": ["Feature one", "Feature two"],
-          "Base": ["Feature three", "Feature four"]
+          "MVP": ["Feature one", "Feature two"],
+          "Roadmap": ["Feature three", "Feature four"]
         }
       }
     }
@@ -78,11 +79,11 @@ Return your response with these exact XML-like tags:
 [Ideal customer profile]
 
 ## Features
-### Core Features
-[List of core features with descriptions]
+### MVP Features
+[List of MVP-defining launch features with descriptions]
 
-### Base Features
-[List of base features with descriptions]
+### Roadmap Features
+[List of roadmap-enriching features with descriptions]
 
 ## Business Model
 [Pricing and revenue model]

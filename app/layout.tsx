@@ -11,7 +11,7 @@ const defaultUrl = process.env.VERCEL_URL
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
   title: "Startup Blueprint",
-  description: "Actually Build Something That Solves Real Problems.",
+  description: "Build Something That Solves Real Problems.",
 };
 
 const geistSans = Geist({

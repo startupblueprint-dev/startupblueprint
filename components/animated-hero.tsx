@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { Caveat } from "next/font/google";
 import { ChatInterface, type DocumentsStatus } from "@/components/chat-interface";
-import { Heart } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
-const HEADLINE_LINE1 = "Actually Build Something";
+const HEADLINE_LINE1 = "Build Something";
 const HEADLINE_LINE2 = "That Solves ";
 const HEADLINE_LINE3 = "Real Problems.";
 const TYPEWRITER_SPEED = 15; // ms per character
@@ -229,7 +229,8 @@ export function AnimatedHero({
                   : "pointer-events-none opacity-0 translate-y-2"
               }`}
             >
-              <Heart className="mr-2 h-4 w-4 translate-y-[1px] fill-white text-white" /> Thanks for the Reminder
+              Get Started{" "}
+              <ArrowRight className="ml-2 h-4 w-4 translate-y-[1px] text-white" />
             </button>
           </blockquote>
         </div>
@@ -313,7 +314,14 @@ export function AnimatedHero({
                       and success metrics before any engineering begins.
                     </span>
                   </span>
-                  {" "}for a globally scalable solution, and launch-ready landing pages to
+                  {" "}for a globally scalable{" "}
+                  <span className="group relative mx-[2px] inline-flex cursor-help items-center text-muted-foreground sm:mx-1">
+                    B2B SaaS
+                    <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden w-60 -translate-x-1/2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-normal text-slate-600 opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 sm:block">
+                      Business-to-Business Software-as-a-Service (B2B SaaS) companies sell cloud software subscription solutions to other businesses.
+                    </span>
+                  </span>
+                  {" "}solution, and launch-ready landing pages to
                   immediately sell to your{" "}
                   <span className="group relative mx-[2px] inline-flex cursor-help items-center text-muted-foreground sm:mx-1">
                     ICPs

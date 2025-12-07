@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Send,
   FileText,
@@ -175,7 +176,7 @@ type ParsedSuggestion = {
   title: string;
   summary?: string;
   tags?: string[];
-  fields: Record<string, string | { Core?: string | string[]; Base?: string | string[] }>;
+  fields: Record<string, string | { MVP?: string | string[]; Roadmap?: string | string[] }>;
 };
 
 type ChatInterfaceProps = {
@@ -586,7 +587,7 @@ The size of the TAM you can reasonably target with your solution.
 Serviceable Obtainable Market (SOM)
 The size of the SAM you can potentially convert to buy your solution.`,
     "Business Model/Pricing": "Describes how revenue is captured—pricing model, tiers, or monetization levers.",
-    "Feature List": "Separates Core must-have MVP launch features, and Base nice-to-have roadmap features.",
+    "Feature List": "Separates MVP launch-critical functionality from Roadmap experiments that extend the vision.",
   };
 
   const ACRONYMS = ["AI", "API", "ML", "UI", "UX", "SaaS", "CRM", "ERP", "B2B", "B2C", "IoT", "SDK", "KPI"];
@@ -667,25 +668,25 @@ The size of the SAM you can potentially convert to buy your solution.`,
   };
 
   const parseFeatureList = (
-    value: string | { Core?: string | string[]; Base?: string | string[] }
+    value: string | { MVP?: string | string[]; Roadmap?: string | string[]; Core?: string | string[]; Base?: string | string[] }
   ) => {
     if (value && typeof value === "object" && !Array.isArray(value)) {
       return {
-        core: normalizeFeatureItems(value.Core),
-        base: normalizeFeatureItems(value.Base),
+        mvp: normalizeFeatureItems(value.MVP ?? value.Core),
+        roadmap: normalizeFeatureItems(value.Roadmap ?? value.Base),
       };
     }
 
     const stringValue = typeof value === "string" ? value : "";
-    const coreMatch = stringValue.match(/Core:?([\s\S]*?)(?=Base:|$)/i);
-    const baseMatch = stringValue.match(/Base:?([\s\S]*)/i);
-    const core = normalizeFeatureItems(coreMatch ? coreMatch[1] : undefined);
-    const base = normalizeFeatureItems(baseMatch ? baseMatch[1] : undefined);
-    if (!core.length && !base.length) {
+    const mvpMatch = stringValue.match(/(?:MVP|Core):?([\s\S]*?)(?=(?:Roadmap|Base):|$)/i);
+    const roadmapMatch = stringValue.match(/(?:Roadmap|Base):?([\s\S]*)/i);
+    const mvp = normalizeFeatureItems(mvpMatch ? mvpMatch[1] : undefined);
+    const roadmap = normalizeFeatureItems(roadmapMatch ? roadmapMatch[1] : undefined);
+    if (!mvp.length && !roadmap.length) {
       const fallback = normalizeFeatureItems(stringValue);
-      return { core: fallback, base: [] };
+      return { mvp: fallback, roadmap: [] };
     }
-    return { core, base };
+    return { mvp, roadmap };
   };
 
   const suggestions = useMemo<ParsedSuggestion[]>(() => {
@@ -938,54 +939,69 @@ The size of the SAM you can potentially convert to buy your solution.`,
                                       ? formatTamSamSomValue(value)
                                       : value;
                                   return (
-                                    <div>
-                                      {renderFieldHeading(label, Icon)}
-                                      <p className="mt-1 whitespace-pre-line text-slate-600">{displayValue as string}</p>
-                                    </div>
+                                    <Card className="h-full border-slate-100 bg-slate-50/80 shadow-sm">
+                                      <CardHeader className="p-4 pb-0">
+                                        {renderFieldHeading(label, Icon)}
+                                      </CardHeader>
+                                      <CardContent className="p-4 pt-3">
+                                        <p className="whitespace-pre-line text-slate-600">{displayValue as string}</p>
+                                      </CardContent>
+                                    </Card>
                                   );
                                 };
 
                                 const renderFeatureListBlock = (value: any, Icon: LucideIcon | undefined) => {
                                   if (!value) return null;
-                                  const { core, base } = parseFeatureList(
-                                    value as string | { Core?: string | string[]; Base?: string | string[] }
+                                  const { mvp, roadmap } = parseFeatureList(
+                                    value as
+                                      | string
+                                      | {
+                                          MVP?: string | string[];
+                                          Roadmap?: string | string[];
+                                          Core?: string | string[];
+                                          Base?: string | string[];
+                                        }
                                   );
                                   return (
-                                    <div className="space-y-3">
-                                      {renderFieldHeading("Feature List", Icon)}
-                                      <div className="grid gap-8 sm:grid-cols-2 sm:gap-12">
-                                        <div>
-                                          <p className="text-xs font-semibold uppercase text-slate-400">Core</p>
-                                          <ul className="mt-2 space-y-2 text-slate-700 text-xs sm:text-sm">
-                                            {core.length > 0 ? (
-                                              core.map((item: string) => (
-                                                <li key={item} className="flex items-start gap-2">
-                                                  <Check className="mt-0.5 h-4 w-4 text-sky-500" />
-                                                  <span>{item}</span>
-                                                </li>
-                                              ))
-                                            ) : (
-                                              <li className="text-slate-500">No core features listed.</li>
-                                            )}
-                                          </ul>
+                                    <Card className="border-slate-100 bg-slate-50/80 shadow-sm">
+                                      <CardHeader className="p-4 pb-0">
+                                        {renderFieldHeading("Feature List", Icon)}
+                                      </CardHeader>
+                                      <CardContent className="p-4 pt-3 space-y-6">
+                                        <div className="grid gap-6 sm:grid-cols-2 sm:gap-8">
+                                          <div>
+                                            <p className="text-xs font-semibold uppercase text-slate-400">MVP</p>
+                                            <ul className="mt-2 space-y-2 text-slate-700 text-xs sm:text-sm">
+                                              {mvp.length > 0 ? (
+                                                mvp.map((item: string) => (
+                                                  <li key={item} className="flex items-start gap-2">
+                                                    <Check className="mt-0.5 h-4 w-4 text-sky-500" />
+                                                    <span>{item}</span>
+                                                  </li>
+                                                ))
+                                              ) : (
+                                                <li className="text-slate-500">No MVP features listed.</li>
+                                              )}
+                                            </ul>
+                                          </div>
+                                          <div>
+                                            <p className="text-xs font-semibold uppercase text-slate-400">Roadmap</p>
+                                            <ul className="mt-2 space-y-2 text-slate-700 text-xs sm:text-sm">
+                                              {roadmap.length > 0 ? (
+                                                roadmap.map((item: string) => (
+                                                  <li key={item} className="flex items-start gap-2">
+                                                    <Check className="mt-0.5 h-4 w-4 text-sky-500" />
+                                                    <span>{item}</span>
+                                                  </li>
+                                                ))
+                                              ) : (
+                                                <li className="text-slate-500">No roadmap features listed.</li>
+                                              )}
+                                            </ul>
+                                          </div>
                                         </div>
-                                        <div>
-                                          <p className="text-xs font-semibold uppercase text-slate-400">Base</p>
-                                          <ul className="mt-2 space-y-2 text-slate-700 text-xs sm:text-sm">
-                                            {base.length > 0 ? (
-                                              base.map((item: string) => (
-                                                <li key={item} className="flex items-start gap-2">
-                                                  <Check className="mt-0.5 h-4 w-4 text-sky-500" />
-                                                  <span>{item}</span>
-                                                </li>
-                                              ))
-                                            ) : (
-                                              <li className="text-slate-500">No base features listed.</li>
-                                            )}
-                                          </ul>
-                                        </div>
-                                      </div>
-                                    </div>
+                                      </CardContent>
+                                    </Card>
                                   );
                                 };
 

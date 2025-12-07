@@ -36,8 +36,8 @@ export async function GET(req: Request) {
           go_to_market_plan,
           current_solutions,
           ten_x_opportunity,
-          features_core,
-          features_base
+          features_mvp,
+          features_roadmap
         )
       `
       )

@@ -571,6 +571,18 @@ export function ChatInterface({ onSuggestionsVisible, onDocumentsStatusChange, d
     "Feature List": ListChecks,
   };
 
+  const suggestionFieldIconClasses: Record<string, string> = {
+    Pain: "text-red-500",
+    Solution: "text-amber-500",
+    "Ideal Customer Profile": "text-blue-500",
+    "Business Model/Pricing": "text-green-500",
+    "TAM/SAM/SOM": "text-purple-500",
+    "Go-to-Market Plan": "text-orange-500",
+    "Current Solutions": "text-slate-500",
+    "10x Better Opportunity": "text-yellow-500",
+    "Feature List": "text-slate-400",
+  };
+
   const FIELD_TOOLTIPS: Record<string, string> = {
     Pain: "Clarifies the urgent workflow breakdown or frustration your target customer lives with today.",
     Solution: "Explains the product concept that relieves the pain in a defensible, scalable way.",
@@ -596,9 +608,10 @@ The size of the SAM you can potentially convert to buy your solution.`,
     const tooltip = FIELD_TOOLTIPS[label];
     const isActive = activeTooltip === label;
 
+    const iconClassName = suggestionFieldIconClasses[label] ?? "text-slate-400";
     return (
       <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
-        {Icon && <Icon className="h-4 w-4 text-sky-500" />}
+        {Icon && <Icon className={`h-4 w-4 ${iconClassName}`} />}
         {tooltip ? (
           <span className="group/tooltip relative inline-flex items-center gap-1">
             <span>{label}</span>
@@ -975,7 +988,7 @@ The size of the SAM you can potentially convert to buy your solution.`,
                                               {mvp.length > 0 ? (
                                                 mvp.map((item: string) => (
                                                   <li key={item} className="flex items-start gap-2">
-                                                    <Check className="mt-0.5 h-4 w-4 text-sky-500" />
+                                                    <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-sky-500" />
                                                     <span>{item}</span>
                                                   </li>
                                                 ))
@@ -990,7 +1003,7 @@ The size of the SAM you can potentially convert to buy your solution.`,
                                               {roadmap.length > 0 ? (
                                                 roadmap.map((item: string) => (
                                                   <li key={item} className="flex items-start gap-2">
-                                                    <Check className="mt-0.5 h-4 w-4 text-sky-500" />
+                                                    <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-green-400" />
                                                     <span>{item}</span>
                                                   </li>
                                                 ))

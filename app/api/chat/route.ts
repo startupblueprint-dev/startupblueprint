@@ -141,15 +141,50 @@ const shouldRetryWithFallback = (error: unknown) => {
   return normalized.includes("not found") || normalized.includes("unsupported model");
 };
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 const streamWithModel = async (
   modelName: string,
   systemPrompt: string,
   history: { role: 'user' | 'model'; parts: { text: string }[] }[],
-  currentMessage: { content: string }
+  currentMessage: { content: string },
+  maxRetries: number = 3
 ) => {
   const model = getGeminiModel(modelName, systemPrompt);
   const chat = model.startChat({ history });
-  return chat.sendMessageStream(currentMessage.content);
+  
+  let lastError: unknown;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await chat.sendMessageStream(currentMessage.content);
+    } catch (error) {
+      lastError = error;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      // Check if it's a retryable error (network or rate limit)
+      const isNetworkError = errorMessage.includes('ECONNRESET') || 
+        errorMessage.includes('forcibly closed') ||
+        errorMessage.includes('incomplete envelope') ||
+        errorMessage.includes('ETIMEDOUT') ||
+        errorMessage.includes('socket hang up');
+      
+      const isRateLimitError = errorMessage.includes('429') ||
+        errorMessage.includes('rate limit') ||
+        errorMessage.includes('quota') ||
+        errorMessage.includes('Resource has been exhausted');
+      
+      if ((isNetworkError || isRateLimitError) && attempt < maxRetries - 1) {
+        const delay = Math.pow(2, attempt) * 1000; // Exponential backoff: 1s, 2s, 4s
+        console.warn(`[Gemini] Network error on attempt ${attempt + 1}, retrying in ${delay}ms...`, errorMessage);
+        await sleep(delay);
+        continue;
+      }
+      
+      throw error;
+    }
+  }
+  
+  throw lastError;
 };
 
 export async function POST(req: Request) {
@@ -218,6 +253,12 @@ export async function POST(req: Request) {
         parts: [{ text: message.content }],
       });
     }
+    
+    // Validate currentMessage
+    if (!currentMessage || !currentMessage.content) {
+      console.error("[ERROR] Invalid current message:", currentMessage);
+      throw new Error("Invalid message: content is required");
+    }
 
     const requestStart = performance.now();
 
@@ -266,6 +307,13 @@ export async function POST(req: Request) {
 
   } catch (error) {
     console.error("Error in chat route:", error);
-    return NextResponse.json({ error: "Failed to process chat request" }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorDetails = {
+      error: "Failed to process chat request",
+      details: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+    };
+    console.error("Full error details:", errorDetails);
+    return NextResponse.json(errorDetails, { status: 500 });
   }
 }

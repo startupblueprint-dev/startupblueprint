@@ -34,30 +34,78 @@ export type DocumentsStatus = "idle" | "generating" | "ready";
 const LOADING_FRAMES: Record<LoadingPhase, string[]> = {
   questions: ["Thinking.", "Thinking..", "Thinking..."],
   suggestions: [
-    "Solving Problems.",
-    "Solving Problems..",
-    "Solving Problems...",
-    "Solving Problems.",
-    "Solving Problems..",
-    "Solving Problems...",
-    "Solving Problems.",
-    "Solving Problems..",
-    "Solving Problems...",
-    "Solving Problems.",
-    "Solving Problems..",
-    "Solving Problems...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
+    "Deconstructing Complexity.",
+    "Deconstructing Complexity..",
+    "Deconstructing Complexity...",
+    "Deconstructing Complexity.",
+    "Deconstructing Complexity..",
+    "Deconstructing Complexity...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
+    "Prototyping Concepts.",
+    "Prototyping Concepts..",
+    "Prototyping Concepts...",
+    "Prototyping Concepts.",
+    "Prototyping Concepts..",
+    "Prototyping Concepts...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
     "Generating Solutions.",
     "Generating Solutions..",
     "Generating Solutions...",
     "Generating Solutions.",
     "Generating Solutions..",
     "Generating Solutions...",
-    "Generating Solutions.",
-    "Generating Solutions..",
-    "Generating Solutions...",
-    "Generating Solutions.",
-    "Generating Solutions..",
-    "Generating Solutions...",            
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
+    "Developing Blueprints.",
+    "Developing Blueprints..",
+    "Developing Blueprints...",
+    "Developing Blueprints.",
+    "Developing Blueprints..",
+    "Developing Blueprints...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
+    "Finalizing Solutions.",
+    "Finalizing Solutions..",
+    "Finalizing Solutions...",
+    "Finalizing Solutions.",
+    "Finalizing Solutions..",
+    "Finalizing Solutions...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
+    "Thinking.",
+    "Thinking..",
+    "Thinking...",
+    "Almost Done.",
+    "Almost Done..",
+    "Almost Done...",
+    "Almost Done.",
+    "Almost Done..",
+    "Almost Done...",
   ],
   documents: [
     "Thinking.",
@@ -341,7 +389,11 @@ export function ChatInterface({ onSuggestionsVisible, onDocumentsStatusChange, d
           }),
         });
 
-        if (!response.ok) throw new Error("Failed to send message");
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error("API Error:", response.status, errorData);
+          throw new Error(errorData.details || `Failed to send message (${response.status})`);
+        }
 
         const reader = response.body?.getReader();
         if (!reader) return;
@@ -393,6 +445,15 @@ export function ChatInterface({ onSuggestionsVisible, onDocumentsStatusChange, d
         }
       } catch (error) {
         console.error("Error:", error);
+        const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+        // Add an error message to the chat
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "model",
+            content: `Sorry, there was an error generating your documents. ${errorMessage.includes("network") || errorMessage.includes("connection") ? "Please check your internet connection and " : "Please "}try again.`,
+          },
+        ]);
         onDocumentsStatusChange?.("idle");
       } finally {
         setIsLoading(false);
@@ -435,7 +496,11 @@ export function ChatInterface({ onSuggestionsVisible, onDocumentsStatusChange, d
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to send message");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("API Error:", response.status, errorData);
+        throw new Error(errorData.details || `Failed to send message (${response.status})`);
+      }
 
       const reader = response.body?.getReader();
       if (!reader) return;
@@ -472,6 +537,15 @@ export function ChatInterface({ onSuggestionsVisible, onDocumentsStatusChange, d
       }
     } catch (error) {
       console.error("Error:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+      // Add an error message to the chat
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "model",
+          content: `Sorry, there was an error. ${errorMessage.includes("network") || errorMessage.includes("connection") ? "Please check your internet connection and " : "Please "}try again.`,
+        },
+      ]);
       if (hasSuggestions && isSelectingSolution) {
         onDocumentsStatusChange?.("idle");
       }
@@ -830,6 +904,8 @@ The size of the SAM you can potentially convert to buy your solution.`,
     ? ""
     : "max-h-[calc(100vh-140px)] sm:max-h-[calc(100vh-200px)] overflow-y-auto pr-2 sm:pr-4";
 
+  const loadingContainerClasses = showLoadingState ? "flex-1 min-h-[60vh]" : "";
+
   useEffect(() => {
     if (!hasSuggestions) return;
     solutionCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -837,7 +913,11 @@ The size of the SAM you can potentially convert to buy your solution.`,
 
   return (
     <div className={`flex w-full flex-col ${hasSuggestions ? "min-h-screen items-center justify-center px-4 sm:px-10 py-6" : "h-full sm:max-w-4xl"}`}>
-      <div className={`relative w-full transition-all duration-500 ease-in-out ${hasSuggestions ? "max-w-5xl" : "flex-1"} ${suggestionViewClasses}`}>
+      <div
+        className={`relative w-full transition-all duration-500 ease-in-out ${
+          hasSuggestions ? "max-w-5xl" : "flex-1"
+        } ${loadingContainerClasses} ${suggestionViewClasses}`}
+      >
         {showLoadingState ? (
           <div className="relative isolate flex h-full flex-col animate-in fade-in duration-500">
             <div className="flex flex-1 flex-col justify-center px-4 pb-6 pt-4 text-center sm:p-10">

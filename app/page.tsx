@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatedHero } from "@/components/animated-hero";
 import { TopBar } from "@/components/top-bar";
-import { ThemeSwitcher } from "@/components/theme-switcher";
 import type { DocumentsStatus } from "@/components/chat-interface";
 
 export default function Home() {
@@ -42,13 +41,6 @@ export default function Home() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,_rgba(96,159,255,0.25)_1px,_transparent_0)] bg-[length:20px_20px]" />
         <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(24,94,165,0.25)_1px,transparent_1px),linear-gradient(90deg,rgba(24,94,165,0.25)_1px,transparent_1px)] bg-[length:120px_120px] opacity-80" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0a1f3c]/40 to-[#01102a]" />
-      </div>
-
-      <div className="absolute top-4 right-4 z-20 hidden md:block">
-        <ThemeSwitcher />
-      </div>
-      <div className="fixed inset-x-0 bottom-4 z-10 flex justify-center md:hidden">
-        <ThemeSwitcher />
       </div>
 
       <div

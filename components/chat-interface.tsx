@@ -563,6 +563,7 @@ export function ChatInterface({ onSuggestionsVisible, onDocumentsStatusChange, d
 
   const lastModelMessage = messages.slice().reverse().find((m) => m.role === "model");
   const questionNumber = messages.filter((m) => m.role === "user").length + 1;
+  const showQuestionCount = questionNumber <= 8;
 
   const { questionText } = useMemo(() => {
     const content = lastModelMessage?.content ?? "";
@@ -1205,7 +1206,9 @@ The size of the SAM you can potentially convert to buy your solution.`,
                         style={{ width: `${Math.min((questionNumber / 8) * 100, 100)}%` }}
                       />
                     </div>
-                    <span className="whitespace-nowrap">{questionNumber}/8</span>
+                    {showQuestionCount && (
+                      <span className="whitespace-nowrap">{questionNumber}/8</span>
+                    )}
                   </div>
                 </div>
               </>
@@ -1215,20 +1218,21 @@ The size of the SAM you can potentially convert to buy your solution.`,
           <div className="relative isolate flex h-full flex-col animate-in fade-in slide-in-from-bottom-8 duration-500">
             <div className="px-4 pb-6 pt-4 sm:p-10">
               <div className="text-center">
-                <h2 className="text-sm font-semibold leading-tight text-sky-700 md:text-lg">
+                <h2 className="text-xs font-semibold leading-tight text-sky-700 sm:text-sm md:text-lg">
                   {activeQuestionText}
                 </h2>
               </div>
-              <div className="mt-4 flex items-stretch gap-0 sm:mt-8">
-                <div className="flex-1 rounded-l-[28px] bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 p-[2px] sm:rounded-l-[999px]">
-                  <div className="flex h-full w-full flex-wrap items-center rounded-l-[26px] bg-white pl-3 pr-0 sm:flex-nowrap sm:rounded-l-[998px] sm:pl-4">
+              <div className="mt-4 flex flex-col gap-2 sm:mt-8 sm:flex-row sm:items-stretch sm:gap-0">
+                <div className="w-full rounded-[28px] bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 p-[2px] sm:w-auto sm:flex-1 sm:rounded-l-[999px] sm:rounded-r-none">
+                  <div className="flex h-full w-full flex-wrap items-center rounded-[26px] bg-white px-3 sm:flex-nowrap sm:rounded-l-[998px] sm:rounded-r-none sm:px-0 sm:pl-4 sm:pr-0">
                     <textarea
                       ref={textareaRef}
+                      rows={1}
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={handleKeyDown}
                       placeholder="Provide your insights here…"
-                      className="block h-auto max-h-32 w-full flex-1 resize-none border-none bg-transparent px-0 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus-visible:ring-0 focus-visible:ring-offset-0 sm:hidden"
+                      className="block h-auto max-h-32 w-full flex-1 resize-none overflow-hidden border-none bg-transparent px-2 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus-visible:ring-0 focus-visible:ring-offset-0 sm:hidden"
                     />
                     <Input
                       ref={inputRef}
@@ -1244,9 +1248,9 @@ The size of the SAM you can potentially convert to buy your solution.`,
                 <Button
                   onClick={handleSend}
                   disabled={!input.trim()}
-                  className="-ml-[6px] rounded-none rounded-r-[24px] bg-slate-900 px-6 text-white transition-all shrink-0 sm:-ml-[6px] sm:rounded-r-[500px] z-10 disabled:bg-slate-400 disabled:text-white disabled:opacity-100"
+                  className="h-10 w-1/3 self-end rounded-[24px] bg-slate-900 px-4 text-sm text-white transition-all sm:-ml-[6px] sm:h-auto sm:w-auto sm:self-auto sm:rounded-none sm:rounded-r-[500px] sm:px-6 sm:text-base shrink-0 z-10 disabled:bg-slate-400 disabled:text-white disabled:opacity-100"
                 >
-                  Next <CircleArrowRight className="ml-2 h-4 w-4" />
+                  Next <CircleArrowRight className="ml-0 h-4 w-4 sm:ml-2" />
                 </Button>
               </div>
 

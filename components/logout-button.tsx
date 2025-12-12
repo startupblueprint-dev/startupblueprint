@@ -7,15 +7,17 @@ import { useRouter } from "next/navigation";
 
 type LogoutButtonProps = {
   className?: string;
+  onClick?: () => void;
 };
 
-export function LogoutButton({ className }: LogoutButtonProps) {
+export function LogoutButton({ className, onClick }: LogoutButtonProps) {
   const router = useRouter();
 
   const logout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/");
+    onClick?.();
   };
 
   return (

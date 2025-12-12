@@ -242,9 +242,9 @@ export function AnimatedHero({
             </span>
           </div>
           <div className="flex h-full flex-col">
-            <div className={`space-y-1 pl-5 pr-5 text-center md:space-y-6 md:pl-10 md:pr-10 md:text-left transition-all duration-500 ${heroCollapsed ? "hidden" : ""}`}>
+            <div className={`space-y-1 pt-4 md:pt-0 pl-5 pr-5 text-center md:space-y-6 md:pl-10 md:pr-10 md:text-left transition-all duration-500 ${heroCollapsed ? "hidden" : ""}`}>
               <div className="space-y-4">
-                <h1 className="text-[clamp(1rem,6vw,1.37rem)] font-semibold leading-tight tracking-tight text-gray-900 sm:text-[2.5rem] sm:leading-tight">
+                <h1 className="text-[clamp(0.9rem,5.5vw,1.2rem)] font-semibold leading-tight tracking-tight text-gray-900 sm:text-[2.5rem] sm:leading-tight">
                   <span className="block whitespace-nowrap sm:whitespace-normal">
                     {line1Text}
                     {isTypingLine1 && <span className="animate-pulse">|</span>}
@@ -337,7 +337,7 @@ export function AnimatedHero({
               <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground" />
             </div>
             <div
-              className={`flex-1 ${heroCollapsed ? "pt-0" : "pt-8 md:pt-6"} transition-all duration-500 ${
+              className={`flex-1 ${heroCollapsed ? "pt-0" : "pt-2 md:pt-6"} transition-all duration-500 ${
                 showChat
                   ? "translate-y-0 opacity-100"
                   : "translate-y-8 opacity-0"
